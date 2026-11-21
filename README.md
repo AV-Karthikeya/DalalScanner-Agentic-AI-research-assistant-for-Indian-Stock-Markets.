@@ -1,9 +1,9 @@
 # 📊 DalalScanner — Agentic AI Research Assistant for Indian Stock Markets
 
 <p align="center">
-  <strong>Automating stock market research with Agentic AI, real financial data, and source-grounded intelligence.</strong>
+  <strong>Automating NSE & BSE stock market research with Agentic AI, deterministic financial math, and source-grounded intelligence.</strong>
   <br/><br/>
-  An AI-powered research assistant that helps investors understand what happened in their watchlist, why it happened, and where the information comes from.
+  An AI-powered equity research workbench that helps investors track what happened in their watchlist, why it happened, and verify every figure against underlying market and exchange data.
   <br/><br/>
   <a href="https://dalalscanner-agentic-ai-research-assistant.streamlit.app/"><strong>🚀 Live Application</strong></a>
 </p>
@@ -12,330 +12,204 @@
 
 ## 💡 Why DalalScanner?
 
-Investors who actively track a watchlist of stocks spend a significant amount of time every day gathering information from different sources.
+Investors who actively track a watchlist spend significant time every day gathering scattered information across multiple platforms:
 
-Understanding why a stock moved often requires manually checking:
+- Stock prices, index benchmarks, and intraday/daily volume trends.
+- Financial news feeds and company announcements.
+- NSE corporate filings, quarterly results, and PDF/XBRL disclosures.
+- Historical strategy behavior and position sizing math.
 
-- Stock prices and historical market data.
-- Financial news and company announcements.
-- NSE and BSE exchange filings, along with relevant SEC/global disclosures.
-- Historical performance and market trends.
-
-This information is scattered across multiple platforms, making daily research repetitive, time-consuming, and difficult to organize.
-
-General-purpose AI chatbots can summarize financial information, but they introduce another problem: **trust and verifiability.**
-
-They may generate inaccurate numbers, make unsupported claims, provide incomplete explanations, or fail to cite original sources. For financial research, where even a small numerical error can influence a decision, this is a serious limitation.
+General-purpose AI chatbots can summarize financial text, but they introduce a major problem: **trust and verifiability.** They may hallucinate numbers, round inconsistently, make unsupported claims, or omit source citations. In financial research, even a small numerical discrepancy undermines decision-making.
 
 ### The Idea
 
-Build an Agentic AI system that automates the daily stock research workflow.
+Build an Agentic AI research workbench that separates **deterministic computation** from **LLM synthesis**:
 
-Instead of manually collecting information from multiple sources, investors should be able to track a watchlist and receive a structured research brief that:
+- Fetches live/delayed market data, financial news RSS feeds, and NSE exchange disclosures.
+- Computes all financial metrics, technical indicators, backtest outcomes, and position sizes in Python rather than letting an LLM guess numbers.
+- Enforces strict Pydantic schemas and deterministic post-generation verification (`evals/verifier.py`) on every figure and citation ID.
+- Links every claim back to its underlying source (`[TICKER_N1]` news IDs or `[Page X]` filing citations).
 
-- Fetches relevant market data, financial news, and exchange filings.
-- Calculates financial figures from retrieved data rather than relying on an LLM to estimate or generate numbers.
-- Identifies relevant developments that help explain stock movements.
-- Links research claims back to their underlying sources.
-- Provides a structured view of market activity, historical performance, and risk.
-
-The objective is simple:
-
-**Reduce repetitive research work while making AI-generated financial intelligence transparent, traceable, and reliable.**
+**Goal:** Reduce repetitive daily research while keeping AI-generated financial intelligence transparent, traceable, and auditable.
 
 ---
 
 ## 🎯 What DalalScanner Does
 
-DalalScanner brings together financial research, market screening, historical backtesting, and risk analysis inside a unified five-tab Streamlit workbench.
+  <img width="1920" height="1200" alt="Screenshot 2026-11-22 000819" src="https://github.com/user-attachments/assets/83b325cb-deb4-4992-a68f-d52ed0edec48" />
 
-The application is organized into:
+DalalScanner unifies market briefs, technical screening, historical backtesting, position sizing, and NSE corporate filings inside a five-view Streamlit workbench:
 
 `Briefs` · `Radar` · `Backtest` · `Risk Plan` · `Filings`
 
-### 1. 🤖 Agentic AI Research Assistant — Briefs
+---
 
-The Briefs module focuses on automating structured market research for user-selected watchlists and indices.
+### 1. 🤖 Verified Market Briefs — `Briefs`
 
-Key capabilities:
+<img width="1299" height="947" alt="2026-11-22 02 38 42 dalalscanner-agentic-ai-research-assistant streamlit app 9a27e92334cf" src="https://github.com/user-attachments/assets/356841e7-0cd2-4610-b13b-0dc4a12adbcd" />
 
-- Coordinates market research and daily brief generation.
-- Combines AI-generated research narratives with deterministic numerical calculations.
-- Supports numerical and citation verification to make research outputs auditable.
-- Supports custom session watchlists.
-- Provides JSON export/import for saving and restoring watchlists and risk preferences.
+Automates structured daily research briefs for custom watchlists and headline indices (`NIFTY 50`, `SENSEX`, `NIFTY BANK`, `INDIA VIX`).
 
-### 2. 📈 Market Data & Technical Radar — Radar
+- **Strict Grounding:** Combines `openai/gpt-oss-120b` (via Groq) with Pydantic structured outputs and deterministic numeric/citation verification.
+- **Audit Proof:** Every ticker brief includes an expandable ground-truth audit table comparing `yfinance` metrics against brief outputs alongside verified source links.
+- **Session Management:** Supports custom watchlists, NSE factsheet index packs, and JSON export/import for watchlists and risk preferences.
 
-A dedicated screening engine designed to help identify important technical conditions across tracked equities.
+---
 
-Key capabilities:
+### 2. 📈 Technical Screener & Radar — `Radar`
 
-- Daily 41-EMA positioning.
-- Relative volume analysis.
-- Distance from 52-week highs.
-- 15-minute Opening Range Breakout (ORB) status.
-- Scan explanations grounded in computed screening results.
+<img width="1920" height="1200" alt="Screenshot 2026-11-22 022539" src="https://github.com/user-attachments/assets/661f3453-acdb-45fa-abee-792629363996" />
+<img width="1462" height="499" alt="2026-11-22 02 26 23 dalalscanner-agentic-ai-research-assistant streamlit app b480cc9735f9" src="https://github.com/user-attachments/assets/6d57496e-9a76-4876-9fd4-cc697852b03b" />
 
-### 3. 📰 News & Exchange Filings — Filings
+A multi-factor technical scanner evaluating equities against trend, momentum, and intraday opening-range levels.
 
-Financial market movements often need to be understood in the context of company announcements and regulatory disclosures.
+- **Indicators Computed:** Daily 41-EMA distance and extension checks, 20-day relative volume, distance from 52-week highs, and 15-minute Opening Range Breakout (ORB) status.
+- **Grounded Scan Explanations:** Generates a verified summary of scan results with deterministic numeric verification against the computed dataframe.
 
-DalalScanner incorporates a dedicated NSE filings research engine.
+---
 
-Key capabilities:
+### 3. 📊 Historical Strategy Backtesting Lab — `Backtest`
 
-- NSE corporate announcements.
-- Quarterly results.
-- Corporate actions.
-- Board meeting information.
-- Shareholding history.
-- Filing-related research and analysis.
-- Grounded Q&A over available filing PDFs and XBRL links.
+<img width="1022" height="959" alt="2026-11-22 02 27 30 dalalscanner-agentic-ai-research-assistant streamlit app 777f0aa9971c" src="https://github.com/user-attachments/assets/d024971b-70ce-42cf-94bc-63efd3321e1e" />
+![Uploading 2026-11-22 02.26.23 dalalscanner-agentic-ai-research-assistant.streamlit.app b480cc9735f9.jpg…]()
+<img width="1677" height="659" alt="2026-11-22 02 28 00 dalalscanner-agentic-ai-research-assistant streamlit app 70d7e3943c25" src="https://github.com/user-attachments/assets/faed515c-fe03-4fc9-9913-1ba660cd0c11" />
 
-The objective is to connect company developments with tracked equities and reduce the time spent manually searching through exchange disclosures.
 
-### 4. 📊 Historical Strategy Analysis — Backtest
+A rule-based historical simulation engine for intraday and swing setups on NSE equities.
 
-A dedicated backtesting engine for evaluating historical trading strategies.
+- **Configurable Parameters:** Supports 15m intraday (e.g., 9:15 AM Opening Range Breakout) and daily swing strategies, custom lookback windows, risk-to-reward ratios, capital per trade, and daily trade caps.
+- **Verified AI Review Notes:** Synthesizes win-rate asymmetry, exit breakdowns (Target vs. Stop-Loss vs. EOD square-off), and parameter insights verified directly against backtest metrics.
 
-Key capabilities:
+---
 
-- Intraday and swing strategy simulation.
-- Configurable historical lookback windows.
-- Customizable risk-to-reward ratios.
-- Capital-per-trade configuration.
-- Daily trade limits.
-- Trade logs and cumulative PnL curves.
-- Performance summaries.
+### 4. 🛡️ Position Sizing & Portfolio Risk Planner — `Risk Plan`
 
-This module helps evaluate strategy behavior against historical data rather than relying solely on assumptions.
+<img width="834" height="989" alt="2026-11-22 02 31 42 dalalscanner-agentic-ai-research-assistant streamlit app 61c9acc79971" src="https://github.com/user-attachments/assets/cd983c70-2607-42ff-be19-d6a4ca8212f6" />
 
-### 5. 🛡️ Risk Planning — Risk Plan
+A deterministic position-sizing and risk-budgeting calculator supporting both **Long (Buy)** and **Short (Sell)** setups.
 
-A risk planning module designed to support more structured position sizing and capital allocation.
+- **Single-Stock & Watchlist Modes:** Sizes share quantities from your maximum rupee or percentage loss limit, supporting **Delivery (1x cash)** and **Intraday (5x margin)**.
+- **Visual Price Ladder & AI Risk Audit:** Displays a to-scale Stop-Loss / Entry / Target ladder, statutory STT/GST/stamp fee estimates, breakeven levels, equal-risk watchlist allocation with 60-day correlation warnings, CSV export, and an AI risk check.
 
-Key capabilities:
+---
 
-- Maximum affordable share quantity calculations.
-- Cash-based Delivery mode (1x).
-- Margin-based Intraday mode (5x).
-- Synchronized stop-loss price controls.
-- Visual risk/reward price ladder.
-- Whole-watchlist equal-risk allocation.
-- Correlation warnings.
-- CSV export.
-- Return horizon projections.
+### 5. 📰 NSE Corporate Filings & Grounded Document Analyzer — `Filings`
 
-### 6. 📑 Financial Report Analysis
+<img width="1921" height="1056" alt="2026-11-22 02 34 29 dalalscanner-agentic-ai-research-assistant streamlit app 171afc51e7a9" src="https://github.com/user-attachments/assets/856b3aa0-8d1a-4687-9468-216e437805c1" />
+<img width="1409" height="939" alt="2026-11-22 02 36 11 dalalscanner-agentic-ai-research-assistant streamlit app eba33bbfc2cb" src="https://github.com/user-attachments/assets/d5b56cf7-5895-40cb-986a-22d863c73d91" />
 
-DalalScanner also includes a dedicated report analysis component.
 
-The `report_analyzer.py` module supports financial report and filing analysis, helping turn financial documents into structured research insights with source references.
+Connects tracked equities directly to live NSE exchange disclosures and cited document Q&A (`nse_filings_engine.py` & `report_analyzer.py`).
+
+- **Live Exchange Feeds:** Fetches quarterly financial results (`Q1–Q4`), corporate announcements, corporate actions, board meetings, and shareholding history.
+- **Cited PDF & XBRL Q&A:** Extracts relevant passages from NSE announcement PDFs or XBRL filings and answers analytical questions with explicit `[Page X]` citations.
 
 ---
 
 ## 🔍 What Makes DalalScanner Different?
 
-The central design principle behind DalalScanner is that:
-
 **Financial research should be verifiable, not just convincing.**
 
 | Dimension | General-Purpose AI | DalalScanner's Approach |
 |---|---|---|
-| Numerical accuracy | May generate unsupported or approximate figures | Uses retrieved data and deterministic calculations |
-| Source attribution | Can produce uncited claims | Connects research claims to supporting sources |
-| Research workflow | Primarily conversational | Structured research, screening, backtesting and risk tools |
-| Financial analysis | Depends heavily on prompts and context | Dedicated analytical Python engines |
-| Reliability | Difficult to evaluate objectively | Automated evaluation through `evals/` and testing through `tests/` |
+| **Numerical accuracy** | May approximate or hallucinate figures | Computes all prices, indicators, PnL, and sizing in deterministic Python |
+| **Source attribution** | Often produces uncited claims | Ties every news claim to `citation_id`s and filing insights to `[Page X]` |
+| **Research workflow** | Unstructured single-chat interface | Dedicated `Briefs`, `Radar`, `Backtest`, `Risk Plan`, and `Filings` modules |
+| **Verification** | Relies on user manual checking | Automated verification layer (`evals/verifier.py`) flags mismatches |
 
 ### 🧪 Reliability Through Evaluation
 
-An important part of this project is evaluating the quality of AI-generated research rather than assuming that a convincing response is necessarily accurate.
+Every generated brief and analytical note is checked across three dimensions:
 
-The evaluation framework focuses on three core dimensions:
-
-**1. Groundedness**
-
-Are generated claims supported by retrieved evidence and relevant citations?
-
-**2. Numeric Accuracy**
-
-Are financial figures consistent with the underlying market data and deterministic calculations?
-
-**3. Material Event Recall**
-
-Does the system identify and surface important developments relevant to the stocks being researched?
-
-The goal is to make reliability measurable and testable rather than relying entirely on subjective assessments of AI-generated responses.
+1. **Numeric Grounding:** Ensures close prices, 1D/5D changes, volume z-scores, scan metrics, and backtest statistics match deterministic tool outputs within strict tolerances.
+2. **Citation Entailment:** Verifies that every cited ID maps to a real retrieved headline or filing page.
+3. **Material Event Recall:** Surfaces relevant corporate announcements, earnings disclosures, and price/volume anomalies for tracked tickers.
 
 ---
 
 ## 🏗️ Project Architecture
 
-DalalScanner follows a modular Python architecture that separates the application interface, research orchestration, analytical engines, data utilities, and evaluation components.
-
 ```text
 DalalScanner/
 │
 ├── .devcontainer/          # Development container configuration
-│
-├── agent/                  # Agentic AI orchestration and verification
-│
-├── data/                   # Saved brief JSON snapshots and data resources
-│
-├── evals/                  # AI output evaluation suite
-│
+├── .streamlit/             # Streamlit light-theme configuration
+├── agent/                  # Agentic AI orchestration and Pydantic schemas
+├── data/                   # Saved brief JSON snapshots
+├── evals/                  # Deterministic numeric & citation verifier
 ├── tests/                  # Unit and integration tests
+├── tools/                  # Price (yfinance) and news (Pulse + Google News RSS) tools
 │
-├── tools/                  # External data and utility tools
-│
-├── app.py                  # Main Streamlit five-tab workbench
-│
-├── config.py               # Application configuration and constants
-│
-├── screener_engine.py      # 41-EMA, volume, 52W and 15m ORB radar
-│
+├── app.py                  # Main Streamlit five-view workbench
+├── ui_theme.py             # Custom light-mode bento CSS and UI components
+├── config.py               # Watchlist presets and constants
+├── screener_engine.py      # 41-EMA, relative volume, 52W and 15m ORB radar
 ├── backtest_engine.py      # Historical strategy backtesting engine
-│
-├── nse_filings_engine.py   # NSE corporate filings and disclosures
-│
-├── report_analyzer.py      # PDF / XBRL report analysis and cited Q&A
-│
-├── risk_planner.py         # Position sizing and risk planning
-│
-├── run_pipeline.py         # Research pipeline execution
-│
+├── risk_planner.py         # Long/Short position sizing and portfolio risk planner
+├── nse_filings_engine.py   # NSE corporate filings and disclosures fetcher
+├── report_analyzer.py      # PDF / XBRL report analyzer with [Page X] citations
+├── run_pipeline.py         # End-to-end daily brief pipeline runner
 ├── requirements.txt        # Python dependencies
-│
-├── .gitignore
-│
 └── README.md
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack & Data Sources
 
-| Technology | Purpose |
-|---|---|
-| Python | Core application and analytical logic |
-| Streamlit | Interactive web application |
-| Agentic AI | Research orchestration and AI-assisted workflows |
-| Financial Market Data | Market analysis and numerical calculations |
-| NSE / BSE | Indian exchange filings and disclosures |
-| SEC / Global Disclosures | Broader financial research context where supported |
-| Automated Evaluation | Groundedness, numeric accuracy and event recall |
-| JSON / CSV | Data export and structured storage |
+| **Layer** | **Technology / Source** | **Purpose** |
+|---|---|---|
+| **Frontend & UI** | Streamlit, Custom CSS (`ui_theme.py`) | Interactive 5-view research workbench |
+| **LLM & Schemas** | Groq (`openai/gpt-oss-120b`), Pydantic | Structured brief synthesis, scan explanations, and cited Q&A |
+| **Analytics & Verification** | Python, Pandas, NumPy, `evals/verifier.py` | Technical indicators, backtesting, risk math, and numeric audit checks |
+| **OHLCV & Indices** | Yahoo Finance (`yfinance`) | Equity & index prices (~15 min delayed) |
+| **Financial News** | Pulse by Zerodha RSS & Google News India RSS | Deduplicated market headlines with deterministic `citation_id`s |
+| **Exchange Disclosures** | NSE India (`nseindia.com` & `nsearchives.nseindia.com`) | Equity master list, quarterly results, corporate actions, PDFs & XBRL |
 
----
-
-## ⚙️ Installation & Setup
-
-Follow these steps to run DalalScanner locally.
-
-### Prerequisites
-
-- Python (compatible with the dependencies in `requirements.txt`).
-- Git.
-- Required API credentials, if applicable.
+## ⚙️ Installation & Local Setup
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/AV-Karthikeya/DalalScanner-Agentic-AI-research-assistant-for-Indian-Stock-Markets.git
-```
 
-### 2. Navigate to the project directory
-
-```bash
 cd DalalScanner-Agentic-AI-research-assistant-for-Indian-Stock-Markets
 ```
 
-### 3. Create a virtual environment
+### 2. Create and activate a virtual environment
 
 ```bash
 python -m venv venv
 ```
 
-Activate the environment:
+- **Windows:** `venv\Scripts\activate`
+- **macOS / Linux:** `source venv/bin/activate`
 
-**Windows**
-
-```bash
-venv\Scripts\activate
-```
-
-**macOS / Linux**
-
-```bash
-source venv/bin/activate
-```
-
-### 4. Install dependencies
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Configure environment variables
+### 4. Configure environment variables
 
-Configure the API keys and environment variables required by the application.
+Create a `.env` file in the project root (or configure Streamlit Secrets for cloud deployment):
 
-For Streamlit deployments, use Streamlit Secrets where appropriate.
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
 
-Never commit API keys, credentials, or other sensitive configuration values to GitHub.
-
-### 6. Run the application
+### 5. Run the application
 
 ```bash
 streamlit run app.py
 ```
 
-The application will be available locally at:
-
-```text
-http://localhost:8501
-```
-
----
-
-## 🧪 Testing & Evaluation
-
-The repository includes dedicated directories for testing and evaluating application behavior.
-
-| Component | Responsibility |
-|---|---|
-| `tests/` | Unit and integration testing |
-| `evals/` | Evaluation of AI-generated research |
-| `run_pipeline.py` | Research pipeline execution |
-
-The evaluation framework focuses on groundedness, numerical accuracy, and recall of material events.
-
----
-
-## 🔮 Future Enhancements
-
-Potential areas for further development include:
-
-- More advanced multi-agent research orchestration.
-- Expanded financial data and news integrations.
-- Improved source verification and evidence tracking.
-- More comprehensive portfolio and risk analytics.
-- Enhanced historical strategy evaluation.
-- Improved explainability of AI-generated research.
-- More comprehensive evaluation of financial research outputs.
-- Automated and personalized daily research briefs.
-
----
+Open `http://localhost:8501` in your browser.
 
 ## ⚠️ Disclaimer
 
-DalalScanner is an experimental financial research and analytical application developed for educational, informational, and research purposes.
-
-Market data may be delayed, incomplete, or subject to source limitations. AI-generated outputs may contain inaccuracies or omissions.
-
-This application does not provide financial or investment advice and does not guarantee investment returns. Users should independently verify information using original sources before making financial decisions.
+DalalScanner is an experimental financial research and analytical workbench built for educational, informational, and research purposes. Market quotes are delayed (~15 minutes) and AI-generated summaries may contain omissions. Nothing in this application constitutes financial or investment advice. Always verify figures against official exchange disclosures before making trading or investment decisions.
 
 ---
 
@@ -343,15 +217,7 @@ This application does not provide financial or investment advice and does not gu
 
 **A V Karthikeya**
 
-Computer Science Engineer | AI/ML | Generative AI | Agentic AI | Python
+Computer Science Engineer · AI/ML · Generative AI · Agentic AI · Python
 
-- GitHub: [AV-Karthikeya](https://github.com/AV-Karthikeya)
-- Live Application: [DalalScanner](https://dalalscanner-agentic-ai-research-assistant.streamlit.app/)
-
----
-
-<p align="center">
-  ⭐ If you find DalalScanner interesting, consider giving this repository a star!
-  <br/><br/>
-  <strong>Built with Python, AI, and a focus on trustworthy financial research.</strong>
-</p>
+- **GitHub:** [AV-Karthikeya](https://github.com/AV-Karthikeya)
+- **Live Application:** [DalalScanner](https://dalalscanner-agentic-ai-research-assistant.streamlit.app/)
