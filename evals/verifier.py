@@ -11,9 +11,9 @@ def verify_ticker_brief(
     """
     Deterministically verifies an LLM-generated TickerBrief against raw tool outputs.
     Checks:
-      1. Structured numeric fields match raw_price within tolerance.
-      2. Numeric values mentioned inside headline_summary exist in raw_price or raw_news.
-      3. All cited_ids exist in raw_news['articles'].
+    1. Structured numeric fields match raw_price within tolerance.
+    2. Numeric values mentioned inside headline_summary exist in raw_price or raw_news.
+    3. All cited_ids exist in raw_news['articles'].
     """
     issues: List[str] = []
 
@@ -40,12 +40,20 @@ def verify_ticker_brief(
         if isinstance(val, (int, float)) and not isinstance(val, bool):
             allowed_numbers.add(round(abs(float(val)), 2))
 
+    # Allow percentage equivalents derived from volume_ratio (e.g., 0.57 -> 57%, 57.0%)
+    vol_ratio = raw_price.get("volume_ratio")
+    if isinstance(vol_ratio, (int, float)) and not isinstance(vol_ratio, bool):
+        pct_exact = round(abs(float(vol_ratio)) * 100.0, 2)
+        allowed_numbers.add(pct_exact)
+        allowed_numbers.add(round(pct_exact, 1))
+        allowed_numbers.add(float(round(pct_exact)))
+
     valid_articles = raw_news.get("articles", [])
     news_text = " ".join(a.get("title", "") for a in valid_articles)
     for num_str in re.findall(r"\d+(?:\.\d+)?", news_text):
         allowed_numbers.add(round(float(num_str), 2))
 
-   # Strip ISO dates (e.g., 2026-11-17) and citation IDs (e.g., HDFCBANK_N3, ^NSEBANK_N1, NSEBANK_N1)
+    # Strip ISO dates (e.g., 2026-11-17) and citation IDs (e.g., HDFCBANK_N3, ^NSEBANK_N1, NSEBANK_N1)
     summary_clean = brief.get("headline_summary", "").replace(",", "")
     summary_clean = re.sub(r"\b\d{4}-\d{2}-\d{2}\b", "", summary_clean)
     summary_clean = re.sub(r"\^?[A-Z0-9]+_N\d+\b", "", summary_clean)

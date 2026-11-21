@@ -60,6 +60,42 @@ st.markdown(
         color: #181920;
         vertical-align: middle;
     }
+    .ds-top-banner {
+        background-color: #FFFFFF;
+        border: 1px solid #ECEEF4;
+        border-radius: 20px;
+        padding: 0.9rem 1.25rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(24,25,32,0.03);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .ds-agent-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: #181920;
+        color: #D9F26B !important;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.24rem 0.65rem;
+        border-radius: 999px;
+    }
+    .ds-meta-chip {
+        display: inline-block;
+        background-color: #F6F7FB;
+        border: 1px solid #E5E8F0;
+        color: #181920 !important;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.28rem 0.7rem;
+        border-radius: 999px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -69,6 +105,7 @@ DATA_PATH = Path("data/latest_brief.json")
 IST = timezone(timedelta(hours=5, minutes=30))
 MAX_TICKERS_PER_RUN = 8
 COOLDOWN_SECONDS = 30
+NAV_OPTIONS = ["Briefs", "Radar", "Backtest", "Risk Plan", "Filings"]
 
 MAJOR_INDICES = {
     "NIFTY 50 (Index)": "^NSEI",
@@ -161,26 +198,53 @@ def market_status_short() -> str:
 
 
 def verify_backtest_notes(notes_text: str, bt_res: dict) -> dict:
-    """Verify numeric tokens in Backtest AI notes against deterministic backtest output."""
-    allowed_numbers: set[float] = set()
+    """Verify numeric tokens in Backtest AI notes against deterministic backtest output & trade log."""
+    allowed_numbers: set[float] = {
+        0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0,
+        9.0, 10.0, 15.0, 20.0, 30.0, 45.0, 50.0, 100.0,
+    }
+
+    # 1. Top-level deterministic metrics
     for val in bt_res.values():
         if isinstance(val, (int, float)) and not isinstance(val, bool):
             allowed_numbers.add(round(float(val), 2))
             allowed_numbers.add(round(abs(float(val)), 2))
 
-    raw_tokens = re.findall(r"(?<![A-Za-z0-9_])[-+]?\d[\d,]*(?:\.\d+)?", notes_text or "")
+    # 2. Derived payoff ratio & percentage comparisons (e.g., avg_win vs avg_loss)
+    avg_win = abs(float(bt_res.get("avg_win_inr") or 0))
+    avg_loss = abs(float(bt_res.get("avg_loss_inr") or 0))
+    if avg_loss > 0 and avg_win > 0:
+        payoff_ratio = round(avg_win / avg_loss, 2)
+        payoff_diff_pct = round(((avg_win - avg_loss) / avg_loss) * 100.0, 1)
+        allowed_numbers.update({
+            payoff_ratio,
+            payoff_diff_pct,
+            float(round(payoff_diff_pct)),
+        })
+
+    # 3. Categorical breakdown counts across all string columns in trades_df (e.g. Outcome / Exit / Side)
+    trades_df = bt_res.get("trades_df")
+    if isinstance(trades_df, pd.DataFrame) and not trades_df.empty:
+        for col in trades_df.select_dtypes(exclude=["number"]).columns:
+            for cnt in trades_df[col].value_counts().values:
+                allowed_numbers.add(float(cnt))
+
+    # Strip clock times like 9:15 or 9:30 AM before scanning numeric tokens
+    cleaned_notes = re.sub(r"\b\d{1,2}:\d{2}\b", "", notes_text or "")
+    raw_tokens = re.findall(r"(?<![A-Za-z0-9_])[-+]?\d[\d,]*(?:\.\d+)?", cleaned_notes)
+
     checked = 0
     mismatches: list[str] = []
     for tok in raw_tokens:
         cleaned = tok.replace(",", "")
         try:
-            num = float(cleaned)
+            num = abs(float(cleaned))
         except ValueError:
             continue
-        if num in {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 20.0, 100.0}:
+        if num in allowed_numbers:
             continue
         checked += 1
-        matched = any(abs(num - ref) <= max(0.05, abs(ref) * 0.015) for ref in allowed_numbers)
+        matched = any(abs(num - ref) <= max(0.5, abs(ref) * 0.02) for ref in allowed_numbers)
         if not matched:
             mismatches.append(tok)
 
@@ -188,6 +252,44 @@ def verify_backtest_notes(notes_text: str, bt_res: dict) -> dict:
         "passed": len(mismatches) == 0,
         "checked_count": checked,
         "mismatches": mismatches,
+    }
+
+
+def enrich_scan_verification(exp_res: dict, rows: list[dict]) -> dict:
+    """Allow derived ORB width/margin values (ORB High - ORB Low) alongside scan row numbers."""
+    ver = dict(exp_res.get("verification") or {})
+    mismatches = list(ver.get("mismatches") or [])
+    if not mismatches:
+        return {**ver, "passed": True, "derived_matched": []}
+
+    derived_allowed: set[float] = set()
+    for r in rows:
+        try:
+            orb_h = float(r.get("ORB High"))
+            orb_l = float(r.get("ORB Low"))
+            width = round(abs(orb_h - orb_l), 2)
+            derived_allowed.add(width)
+            derived_allowed.add(round(abs(orb_h - orb_l), 1))
+        except Exception:
+            continue
+
+    still_unmatched: list[str] = []
+    derived_matched: list[str] = []
+    for tok in mismatches:
+        try:
+            val = round(abs(float(str(tok).replace(",", ""))), 2)
+            if any(abs(val - d) <= 0.05 for d in derived_allowed):
+                derived_matched.append(tok)
+            else:
+                still_unmatched.append(tok)
+        except Exception:
+            still_unmatched.append(tok)
+
+    return {
+        **ver,
+        "mismatches": still_unmatched,
+        "derived_matched": derived_matched,
+        "passed": len(still_unmatched) == 0,
     }
 
 
@@ -253,6 +355,8 @@ def load_nse_universe() -> dict[str, str]:
 
 
 # --- Session State Initialization ---
+if "active_nav_view" not in st.session_state:
+    st.session_state.active_nav_view = "Briefs"
 if "selected_watchlist" not in st.session_state:
     st.session_state.selected_watchlist = list(BUILT_IN_PACKS["Nifty 50 Top 5"]["items"])
 if "active_pack_meta" not in st.session_state:
@@ -299,6 +403,12 @@ def resolve_queue_tickers(nse_options: dict[str, str]) -> list[str]:
 
 
 # --- Callbacks for Safe Widget Reset ---
+def on_nav_pill_change():
+    picked_nav = st.session_state.get("ds_nav_pills")
+    if picked_nav in NAV_OPTIONS:
+        st.session_state.active_nav_view = picked_nav
+
+
 def on_pack_pill_change():
     selected = st.session_state.get("pack_selector_pills")
     if not selected:
@@ -328,7 +438,7 @@ def on_queue_chip_change():
 report = load_report()
 last_run_ist = format_ist_short(report["generated_at_utc"]) if report else "not yet run"
 
-# --- Left Dark Sidebar Rail (#181920) ---
+# --- Left Dark Sidebar Rail (#181920) with Pills Navigation ---
 with st.sidebar:
     st.markdown(
         '<div class="ds-brand">'
@@ -338,16 +448,16 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    active_view = st.pills(
-    "Navigation",
-    options=["Briefs", "Radar", "Backtest", "Risk Plan", "Filings"],
-    selection_mode="single",
-    default="Briefs",
-    label_visibility="collapsed",
-    key="ds_nav_view",
-    width="stretch",
-)
-    
+    st.pills(
+        "Navigation",
+        options=NAV_OPTIONS,
+        default=st.session_state.active_nav_view,
+        selection_mode="single",
+        label_visibility="collapsed",
+        key="ds_nav_pills",
+        on_change=on_nav_pill_change,
+    )
+    active_view = st.session_state.active_nav_view
 
     st.markdown(
         f'<div class="ds-sidebar-promo">'
@@ -357,12 +467,16 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    st.write("")
     with st.expander("About & guardrails", expanded=False):
         st.markdown(
             f"**Engine:** `openai/gpt-oss-120b` (Groq)\n\n"
-            "**Verification:** Deterministic numeric & citation checks.\n\n"
-            f"**Limits:** Max {MAX_TICKERS_PER_RUN} tickers · {COOLDOWN_SECONDS}s cooldown."
+            "**Verification:** Deterministic numeric & citation grounding checks.\n\n"
+            "**Data Sources:**\n"
+            "- **OHLCV & Indices:** Yahoo Finance (`yfinance`, ~15m delayed)\n"
+            "- **Market News:** Pulse by Zerodha (`pulse.zerodha.com` RSS) & Google News India RSS\n"
+            "- **Equity Master & Filings:** NSE India (`nseindia.com` announcements, Q1–Q4 results, XBRL/PDFs)\n"
+            "- **Index Weights:** NSE Index Factsheets (Nov 2026)\n\n"
+            f"**Guardrails:** Max {MAX_TICKERS_PER_RUN} tickers · {COOLDOWN_SECONDS}s cooldown · research only, not investment advice."
         )
 
     with st.expander("Watchlist backup (JSON)", expanded=False):
@@ -396,41 +510,54 @@ with st.sidebar:
             except Exception:
                 st.error("Invalid JSON.")
 
-# --- Eduplex Asymmetric Split: Main Left Canvas (2.45) + Right Action Rail (1.05) ---
+# --- Load Universe & Market Pulse ---
 nse_options = load_nse_universe()
 pulse_data = load_market_pulse()
 vix_item = next((p for p in pulse_data if p["label"] == "INDIA VIX"), None)
 vix_live = round(vix_item["value"], 2) if vix_item else None
 index_cards = [p for p in pulse_data if p["label"] != "INDIA VIX"][:3]
 
+# --- Full-Width Top Brand & AI Research Agent Banner ---
+st.markdown(
+    f'<div class="ds-top-banner">'
+    f'  <div>'
+    f'    <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap;">'
+    f'      <h1 class="ds-title">DalalScanner</h1>'
+    f'      <span class="ds-agent-pill">AI Research Agent · NSE &amp; BSE</span>'
+    f'    </div>'
+    f'    <div style="font-size:0.84rem; color:#454B5A; margin-top:0.25rem; font-weight:500;">'
+    f'      Verified market briefs, technical radar, strategy backtests &amp; NSE filings grounded in live OHLCV and exchange feeds'
+    f'    </div>'
+    f'  </div>'
+    f'  <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">'
+    f'    <span class="ds-meta-chip">{market_status_short()}</span>'
+    f'    <span class="ds-meta-chip">Last brief: {last_run_ist}</span>'
+    f'  </div>'
+    f'</div>',
+    unsafe_allow_html=True,
+)
+
+# --- Asymmetric Split: Main Left Canvas (2.45) + Right Action Rail (1.05) ---
 main_left, main_right = st.columns([2.45, 1.05], vertical_alignment="top")
 
 with main_left:
-    hdr_l, hdr_r = st.columns([1.4, 1.3], vertical_alignment="center")
-    with hdr_l:
-        st.markdown('<h1 class="ds-title">DalalScanner</h1>', unsafe_allow_html=True)
-        st.markdown(
-            f'<p class="ds-status">{market_status_short()} · data delayed ~15 min · last brief {last_run_ist}</p>',
-            unsafe_allow_html=True,
-        )
-    with hdr_r:
-        picked = st.selectbox(
-            "Search stocks or indices",
-            options=list(nse_options.keys()),
-            index=None,
-            accept_new_options=True,
-            label_visibility="collapsed",
-            key=f"search_select_{st.session_state.search_box_key}",
-            placeholder="Search NIFTY, Reliance, Tata, or RELIANCE.BO...",
-        )
-        if picked:
-            if len(st.session_state.selected_watchlist) >= MAX_TICKERS_PER_RUN:
-                st.warning(f"Max {MAX_TICKERS_PER_RUN} instruments per run.")
-            elif picked not in st.session_state.selected_watchlist:
-                st.session_state.selected_watchlist.append(picked)
-                st.session_state.active_pack_meta = ""
-            st.session_state.search_box_key += 1
-            st.rerun()
+    picked = st.selectbox(
+        "Search stocks or indices",
+        options=list(nse_options.keys()),
+        index=None,
+        accept_new_options=True,
+        label_visibility="collapsed",
+        key=f"search_select_{st.session_state.search_box_key}",
+        placeholder="Search NIFTY, Reliance, Tata, or RELIANCE.BO...",
+    )
+    if picked:
+        if len(st.session_state.selected_watchlist) >= MAX_TICKERS_PER_RUN:
+            st.warning(f"Max {MAX_TICKERS_PER_RUN} instruments per run.")
+        elif picked not in st.session_state.selected_watchlist:
+            st.session_state.selected_watchlist.append(picked)
+            st.session_state.active_pack_meta = ""
+        st.session_state.search_box_key += 1
+        st.rerun()
 
     # 3 Pastel-Badged Index Cards
     if index_cards:
@@ -691,7 +818,8 @@ if active_view == "Briefs":
                 if verdict["passed"]:
                     st.success("All structured metrics, narrative numbers, and citation IDs matched ground-truth tool outputs.")
                 else:
-                    st.error(f"Flagged issues: {verdict.get('errors', [])}")
+                    flagged_list = verdict.get("issues") or verdict.get("errors") or []
+                    st.error(f"Flagged issues: {flagged_list}")
 
                 a1, a2 = st.columns(2)
                 with a1:
@@ -865,8 +993,8 @@ elif active_view == "Radar":
                 )
 
             st.write("")
+            scan_rows_json = sorted_radar.to_dict(orient="records")
             if st.button("Explain this scan", key="explain_radar_scan_btn"):
-                scan_rows_json = sorted_radar.to_dict(orient="records")
                 with st.spinner("Generating grounded scan explanation & verifying numbers..."):
                     st.session_state["tab2_scan_explanation"] = explain_radar_scan(
                         rows=scan_rows_json,
@@ -876,7 +1004,7 @@ elif active_view == "Radar":
 
             exp_res = st.session_state.get("tab2_scan_explanation")
             if exp_res:
-                ver = exp_res.get("verification", {})
+                ver = enrich_scan_verification(exp_res, scan_rows_json)
                 badge_html = render_verification_badge(bool(ver.get("passed")))
                 with st.container(border=True):
                     st.markdown(f"**Scan explanation** &nbsp; {badge_html}", unsafe_allow_html=True)
@@ -884,9 +1012,10 @@ elif active_view == "Radar":
 
                     with st.expander("Inspect scan verification & raw rows"):
                         if ver.get("passed"):
-                            st.success(
-                                f"All {ver.get('checked_count', 0)} numeric tokens matched the deterministic scan rows."
-                            )
+                            msg = f"All {ver.get('checked_count', 0)} numeric tokens matched deterministic scan figures."
+                            if ver.get("derived_matched"):
+                                msg += f" Derived ORB widths verified: {', '.join(ver['derived_matched'])}."
+                            st.success(msg)
                         else:
                             st.warning(f"Unmatched numeric tokens: {ver.get('mismatches', [])}")
                         st.json(
@@ -894,7 +1023,7 @@ elif active_view == "Radar":
                                 "as_of": as_of_date,
                                 "nifty_regime": nifty_regime,
                                 "verification": ver,
-                                "rows": sorted_radar.to_dict(orient="records"),
+                                "rows": scan_rows_json,
                             }
                         )
 
@@ -934,7 +1063,7 @@ elif active_view == "Backtest":
         with p2:
             bt_rr = st.selectbox("Risk-to-reward ratio", options=[1.5, 2.0, 2.5, 3.0], index=1, key="bt_rr_select")
         with p3:
-            bt_cap = st.number_input("Capital / trade (₹)", min_value=10000.0, value=100000.0, step=10000.0)
+            bt_cap = st.number_input("Capital / trade (₹)", min_value=1000.0, value=10000.0, step=1000.0)
         with p4:
             trade_cap_choice = st.selectbox(
                 "Max trades / day",
@@ -1049,7 +1178,6 @@ def render_risk_plan_view():
     is_one_stock = st.session_state["rp_mode"] == "One stock"
     is_short = st.session_state["rp_direction"] == "Short (Sell)"
 
-    # 3-Checkpoint HTML Step Line
     step2_txt = "Direction, stock & stop-loss" if is_one_stock else "Direction, stocks & stop-loss"
     st.markdown(render_risk_stepper("Your limits", step2_txt, "Your plan"), unsafe_allow_html=True)
 

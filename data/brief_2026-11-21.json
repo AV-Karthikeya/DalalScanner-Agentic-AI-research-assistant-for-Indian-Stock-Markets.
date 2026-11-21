@@ -1,0 +1,426 @@
+{
+  "generated_at_utc": "2026-11-21T19:38:07.904120+00:00",
+  "verification": {
+    "total_tickers": 5,
+    "passed_count": 5,
+    "pass_rate_pct": 100.0,
+    "per_ticker": {
+      "HDFCBANK.NS": {
+        "ticker": "HDFCBANK.NS",
+        "passed": true,
+        "status": "VERIFIED",
+        "issue_count": 0,
+        "issues": [],
+        "verified_citations": [
+          "HDFCBANK_N3",
+          "HDFCBANK_N5"
+        ]
+      },
+      "ICICIBANK.NS": {
+        "ticker": "ICICIBANK.NS",
+        "passed": true,
+        "status": "VERIFIED",
+        "issue_count": 0,
+        "issues": [],
+        "verified_citations": [
+          "ICICIBANK_N1",
+          "ICICIBANK_N2"
+        ]
+      },
+      "RELIANCE.NS": {
+        "ticker": "RELIANCE.NS",
+        "passed": true,
+        "status": "VERIFIED",
+        "issue_count": 0,
+        "issues": [],
+        "verified_citations": [
+          "RELIANCE_N3",
+          "RELIANCE_N4"
+        ]
+      },
+      "BHARTIARTL.NS": {
+        "ticker": "BHARTIARTL.NS",
+        "passed": true,
+        "status": "VERIFIED",
+        "issue_count": 0,
+        "issues": [],
+        "verified_citations": []
+      },
+      "LT.NS": {
+        "ticker": "LT.NS",
+        "passed": true,
+        "status": "VERIFIED",
+        "issue_count": 0,
+        "issues": [],
+        "verified_citations": [
+          "LT_N1"
+        ]
+      }
+    }
+  },
+  "briefs": {
+    "HDFCBANK.NS": {
+      "ticker": "HDFCBANK.NS",
+      "company_name": "HDFC Bank Limited",
+      "sentiment": "Bullish",
+      "close_price": 846.0,
+      "day_change_pct": 2.94,
+      "five_day_change_pct": 5.22,
+      "volume_zscore": 1.86,
+      "headline_summary": "HDFC Bank closed at INR 846.0 on Nov 20, up 2.94% from the previous close, marking a 5.22% gain over the past five days. The stock saw strong buying pressure with a 20‑day volume z‑score of 1.86, supported by news of Lily Vadera’s re‑appointment as chairperson and a 50‑basis‑point increase in FD rates.",
+      "key_drivers": [
+        "Re‑appointment of Lily Vadera as chairperson per postal ballot (HDFCBANK_N3)",
+        "FD rates raised by up to 50 bps, potentially boosting margins (HDFCBANK_N5)",
+        "Elevated trading volume reflected by a 20‑day volume z‑score of 1.86"
+      ],
+      "cited_ids": [
+        "HDFCBANK_N3",
+        "HDFCBANK_N5"
+      ]
+    },
+    "ICICIBANK.NS": {
+      "ticker": "ICICIBANK.NS",
+      "company_name": "ICICI Bank Limited",
+      "sentiment": "Bullish",
+      "close_price": 1640.0,
+      "day_change_pct": 1.93,
+      "five_day_change_pct": 3.56,
+      "volume_zscore": 0.15,
+      "headline_summary": "ICICI Bank closed at INR 1,640.0 on 20 Nov 2026, up 1.93% (INR 31.1) from the previous close of INR 1,608.9. The stock hit a fresh 52‑week high, supported by modestly elevated trading volume (20‑day volume z‑score 0.15).",
+      "key_drivers": [
+        "Price rose 1.93% to a fresh 52‑week high",
+        "Trading volume slightly above 20‑day average (z‑score 0.15)",
+        "Positive valuation view in market commentary"
+      ],
+      "cited_ids": [
+        "ICICIBANK_N1",
+        "ICICIBANK_N2"
+      ]
+    },
+    "RELIANCE.NS": {
+      "ticker": "RELIANCE.NS",
+      "company_name": "Reliance Industries Limited",
+      "sentiment": "Neutral",
+      "close_price": 1377.5,
+      "day_change_pct": 0.14,
+      "five_day_change_pct": 2.82,
+      "volume_zscore": -0.47,
+      "headline_summary": "Reliance closed at INR 1377.5 on 2026-11-20, up 0.14% from the prior close and marking a 2.82% gain over the past five days, while 20‑day volume was below average with a z‑score of -0.47. Promoters bought 4.26 lakh shares, signaling confidence, but analysts note the stock may be overvalued after a $1.6B biogas investment.",
+      "key_drivers": [
+        "Promoter buying of 4.26 lakh shares",
+        "Concerns over $1.6B biogas investment valuation",
+        "Modest price rise with below‑average trading volume"
+      ],
+      "cited_ids": [
+        "RELIANCE_N3",
+        "RELIANCE_N4"
+      ]
+    },
+    "BHARTIARTL.NS": {
+      "ticker": "BHARTIARTL.NS",
+      "company_name": "Bharti Airtel Limited",
+      "sentiment": "Bullish",
+      "close_price": 2161.7,
+      "day_change_pct": 0.83,
+      "five_day_change_pct": 2.64,
+      "volume_zscore": -0.99,
+      "headline_summary": "Bharti Airtel closed at INR 2,161.7 on 2026-11-20, up 0.83% from the previous close. The stock has risen 2.64% over the past five trading days despite trading volume at only 57% of its 20‑day average.",
+      "key_drivers": [
+        "Modest price gain of 0.83% on the day",
+        "Positive five‑day momentum of 2.64%",
+        "Low trading volume reflected by a -0.99 z‑score"
+      ],
+      "cited_ids": []
+    },
+    "LT.NS": {
+      "ticker": "LT.NS",
+      "company_name": "Larsen & Toubro Limited",
+      "sentiment": "Neutral",
+      "close_price": 4209.1,
+      "day_change_pct": -0.05,
+      "five_day_change_pct": 1.58,
+      "volume_zscore": -0.19,
+      "headline_summary": "Larsen & Toubro closed at INR 4,209.1 on Nov 20, 2026, down 0.05% from the previous close of INR 4,211.0. The stock has risen 1.58% over the past five trading days, while 20‑day volume was slightly below average, reflected by a volume z‑score of -0.19. A live price update from Upstox (LT_N1) was the only news item, offering no new catalyst.",
+      "key_drivers": [
+        "Slight 0.05% dip in price on the day",
+        "5‑day gain of 1.58% indicating short‑term upward momentum",
+        "20‑day volume below average (z‑score -0.19)"
+      ],
+      "cited_ids": [
+        "LT_N1"
+      ]
+    }
+  },
+  "raw_prices": {
+    "HDFCBANK.NS": {
+      "ticker": "HDFCBANK.NS",
+      "status": "ok",
+      "trade_date": "2026-11-20",
+      "currency": "INR",
+      "open": 815.5,
+      "high": 850.35,
+      "low": 815.5,
+      "close": 846.0,
+      "prev_close": 821.8,
+      "day_change": 24.2,
+      "day_change_pct": 2.94,
+      "five_day_change_pct": 5.22,
+      "volume": 70110384,
+      "avg_volume_20d": 38455544,
+      "volume_ratio": 1.82,
+      "volume_zscore": 1.86,
+      "unusual_volume": false,
+      "realized_vol_20d_pct": 23.76,
+      "fetched_at_utc": "2026-11-21T19:37:08.650965+00:00"
+    },
+    "ICICIBANK.NS": {
+      "ticker": "ICICIBANK.NS",
+      "status": "ok",
+      "trade_date": "2026-11-20",
+      "currency": "INR",
+      "open": 1602.0,
+      "high": 1645.0,
+      "low": 1600.9,
+      "close": 1640.0,
+      "prev_close": 1608.9,
+      "day_change": 31.1,
+      "day_change_pct": 1.93,
+      "five_day_change_pct": 3.56,
+      "volume": 17973342,
+      "avg_volume_20d": 16553745,
+      "volume_ratio": 1.09,
+      "volume_zscore": 0.15,
+      "unusual_volume": false,
+      "realized_vol_20d_pct": 27.1,
+      "fetched_at_utc": "2026-11-21T19:37:08.838048+00:00"
+    },
+    "RELIANCE.NS": {
+      "ticker": "RELIANCE.NS",
+      "status": "ok",
+      "trade_date": "2026-11-20",
+      "currency": "INR",
+      "open": 1369.0,
+      "high": 1383.0,
+      "low": 1356.1,
+      "close": 1377.5,
+      "prev_close": 1375.6,
+      "day_change": 1.9,
+      "day_change_pct": 0.14,
+      "five_day_change_pct": 2.82,
+      "volume": 13167730,
+      "avg_volume_20d": 21062424,
+      "volume_ratio": 0.63,
+      "volume_zscore": -0.47,
+      "unusual_volume": false,
+      "realized_vol_20d_pct": 41.05,
+      "fetched_at_utc": "2026-11-21T19:37:08.972178+00:00"
+    },
+    "BHARTIARTL.NS": {
+      "ticker": "BHARTIARTL.NS",
+      "status": "ok",
+      "trade_date": "2026-11-20",
+      "currency": "INR",
+      "open": 2138.9,
+      "high": 2164.8,
+      "low": 2131.0,
+      "close": 2161.7,
+      "prev_close": 2144.0,
+      "day_change": 17.7,
+      "day_change_pct": 0.83,
+      "five_day_change_pct": 2.64,
+      "volume": 5284404,
+      "avg_volume_20d": 9302984,
+      "volume_ratio": 0.57,
+      "volume_zscore": -0.99,
+      "unusual_volume": false,
+      "realized_vol_20d_pct": 23.21,
+      "fetched_at_utc": "2026-11-21T19:37:09.122929+00:00"
+    },
+    "LT.NS": {
+      "ticker": "LT.NS",
+      "status": "ok",
+      "trade_date": "2026-11-20",
+      "currency": "INR",
+      "open": 4153.9,
+      "high": 4210.1,
+      "low": 4129.1,
+      "close": 4209.1,
+      "prev_close": 4211.0,
+      "day_change": -1.9,
+      "day_change_pct": -0.05,
+      "five_day_change_pct": 1.58,
+      "volume": 2154352,
+      "avg_volume_20d": 2367782,
+      "volume_ratio": 0.91,
+      "volume_zscore": -0.19,
+      "unusual_volume": false,
+      "realized_vol_20d_pct": 18.11,
+      "fetched_at_utc": "2026-11-21T19:37:09.372052+00:00"
+    }
+  },
+  "raw_news": {
+    "HDFCBANK.NS": {
+      "ticker": "HDFCBANK.NS",
+      "company_name": "HDFC Bank Limited",
+      "status": "ok",
+      "article_count": 5,
+      "articles": [
+        {
+          "title": "HDFC Bank Limited (HDFCBANK.NS) Stock Price, News, Quote & History",
+          "source": "Yahoo! Finance Canada",
+          "published": "Sat, 21 Nov 2026 10:24:54 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE5XTzhGSUFMZ1NyVWthWVk2cEZ3RHZQc0VuT3BxQTBWM3B2V2hIQTBBOENtV0loTTBwXy0tczFvQXEwZlRLTlVhS2hmSkdJb3hFX3JlSlJBTU1weTg?oc=5",
+          "citation_id": "HDFCBANK_N1"
+        },
+        {
+          "title": "HDFC Bank Share Price - Live NSE: HDFCBANK Stock Price & Chart",
+          "source": "Upstox",
+          "published": "Sat, 21 Nov 2026 02:22:02 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE1haXVDV2V3Wm5yQXBKZFJjZjkyQ0syd3BZWnRJZmo5UEdhckVTeTViZWtfVnkyRF9LVGRwSXZwMEo4Q1lUSDZfUzFlQmM1bEJhaFZEMXhSRHQ3S0h0THNBdXBB?oc=5",
+          "citation_id": "HDFCBANK_N2"
+        },
+        {
+          "title": "HDFC Bank HDFCBANK Postal Ballot Result: Lily Vadera Re-Appointed",
+          "source": "Kalkine India",
+          "published": "Fri, 20 Nov 2026 15:13:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxOV1lTejM3NVM5NXFmTFVWOHNYajE0cGFVRmptV0w3Mk81N1puZk56YkFOMGNtcUhjaS1YVTlsZmM0Y2FvZlNuTktHQzkyS0pET01iVEJkT2lVUU9IQjktMHBvSS1iOF9HOUp2bzRYbUZuM1huUVE0UHhxOWtubWI3dnZlUVM5VW5aM1Awa1lycW01bE5FMm1pMzFvb1VhTS1BS0lLT2xaRk1qTVdyYXdkaHlTMk9hcFhQYVUwX0NaeWE1MW9laGRlOC1zeU5OUjBBVFl3?oc=5",
+          "citation_id": "HDFCBANK_N3"
+        },
+        {
+          "title": "Zee Business. . Stock In Action BirlaSoft और Coforge में शानदार तेजी, आगे क्या? NSE में जारी है मजबूती, क्या करें? Maruti और Hyundai ने कैसे किया कमाल? HDFC Bank क्यों बना रॉकेट? Union Bank में अभी भी खरीदार",
+          "source": "Facebook",
+          "published": "Fri, 20 Nov 2026 09:23:16 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi1wRBVV95cUxQYk8wb2czVVFXMmRfeFV1cjR6anVHV25BMGlyc2NIbHVnNTUwbDdRNzltYkU1RGlZWDdVRDI0U3IzQllsQmxSallqYTZmazJ1MjVYS3VpZkN4RG1FejA0eVpPUEJMRUVHRHltd2k2ZFlxWDZvWHJIZk84ODUxNXM3Wkk0cnUtNVZRN1hUX2pObUxqVGZPdkdVbHgtN25DRTNzN0ZsbGVfc0c3bElPWks2dDk1aW1OQnhYMHljellIbHBiWEh2ZUxNT3dlVE5vQTRmMnBLODlrN1ktRjNSajVQd2lxLXROVGdMVm5ld3ZadU1MQzB0MnRwcDJQM3Mxa3dodlcxamhDZHpvNFlZRld1UW9YVk1yaFVDVDJrNHVMekttSlJzMVBpQlRHVW1MdzNjOHk4RFNOR1c2QVF0b1FackFOSXhTbVQ2Uk43YkVSUkxSblNWX3g3STRSVnRralBsM1dSOGJlX0ZDam9UQ2dwSk1rVkxfTnpsd2FoR1p1SXBVVllYM1VsVDNtZkhONjNRTy1Ja2xPVmpxN0E4S3Y0R01qVzBOTFpfNlV0YUszU2Rxa1p6ZFZSRHNuN25DS1k3NlktR3VoV0FLOHozb09UYW9taGlwUm43NlF1eGNrZjNyaE9ucXdzRDBZOGVoaTdmeF94N004NTJxWkZ3bVhzaDlaaHVWUDVJd29IZGpqaWd4RUZTNGk3eXZLTXZyZ3pmalJPRl93UHRXRnFWb09qSk1xVkdLTVJPdWZlN1ZSZHZ5X0VQbzE0TmI4WDN3SjJCSVROc2s3aw?oc=5",
+          "citation_id": "HDFCBANK_N4"
+        },
+        {
+          "title": "HDFC Bank FD Rates Raised by Up to 50 bps: Key Details",
+          "source": "Kalkine India",
+          "published": "Fri, 20 Nov 2026 12:17:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxOb1pHSHBTWFJmeWFnYktKbVd0U25qbGJFU1pwSmVWWkpWVTFsR3pDbmxvQ2NWMVhVY08yYW1XRE5qSmhzQVJCOTRCcDJSMlFVLUYtZWVHVXh3Uko1QVhsYWx6MG4xdGY3NXFOU2stbllwRFNoUnU4cXpMb04wSHYtWVc1MnhKZl9LWkxiTTFLU1pGREVvaWNSU0lLVTZJdGNYR3FTTFE1dDFTVGUxYmZKTUtHNk1uQnl4WDNfU0Q4NWg2OEIzanp2ZW4tVDZZR2pnNW9ETHVqYmxGQnlNb2E2THpkVTN1Z082?oc=5",
+          "citation_id": "HDFCBANK_N5"
+        }
+      ],
+      "fetched_at_utc": "2026-11-21T19:37:11.288659+00:00"
+    },
+    "ICICIBANK.NS": {
+      "ticker": "ICICIBANK.NS",
+      "company_name": "ICICI Bank Limited",
+      "status": "ok",
+      "article_count": 2,
+      "articles": [
+        {
+          "title": "ICICI Bank Share Price - Live NSE: ICICIBANK Stock Price & Chart",
+          "source": "Upstox",
+          "published": "Fri, 20 Nov 2026 14:56:59 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE41ZWlLb1o0emplRlRyWWY3MnhuaG1TMzVobHB2ZVk4NGc5aTFkb3FrX2Q4ZjZaanV6V2oySlFPTlZZa05qUnNicW9pNktGdnlxU1BvalA3VjJVUlBqaUtSSmdaMA?oc=5",
+          "citation_id": "ICICIBANK_N1"
+        },
+        {
+          "title": "ICICI Bank Share Price at fresh 52-week high, valuation view",
+          "source": "Univest",
+          "published": "Fri, 20 Nov 2026 05:53:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxOTVJpRDc1bFkwc2IxMGNROWwwdGJINTdUX1RtU0VzdzlhcEdHNlpodUZhblRIWFplN3FURGpsckFyVVFOM3BTWkhOSDRpRWdBTDdtNnpiYm55SV9VTmxCOXdlbURVendvb21Pa2ZhYlFDMW14ME5OT0xMeFRrSFZ1ZUZrWldjUQ?oc=5",
+          "citation_id": "ICICIBANK_N2"
+        }
+      ],
+      "fetched_at_utc": "2026-11-21T19:37:12.055352+00:00"
+    },
+    "RELIANCE.NS": {
+      "ticker": "RELIANCE.NS",
+      "company_name": "Reliance Industries Limited",
+      "status": "ok",
+      "article_count": 5,
+      "articles": [
+        {
+          "title": "Reliance Industries Limited (RELIANCE.NS) stock price, news, quote and history",
+          "source": "Yahoo Finance Singapore",
+          "published": "Fri, 20 Nov 2026 15:12:39 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTFB1UDZIUDhFZW9XLXg2c2J0LVI1aDE2SVJCcVBOZGJMbDlpdmlfaHRPeWZIZjlqQkNzWEtOUmtsa19NUVpGcnRwazJ1djQ4ckYtZm1TQVpkb3MzaTg?oc=5",
+          "citation_id": "RELIANCE_N1"
+        },
+        {
+          "title": "BLEL.NS (BLEL) Share Price Today (NSE), Market News",
+          "source": "TechGraph",
+          "published": "Sat, 21 Nov 2026 12:26:30 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE1yQkdzWi1xSlAzOUxpc3VRY1hrSzA3TTdodU1Fdm1QaVBrM0xacXRMUFRWYWV2bXBBRFNOVmxFNHNONE9kMEcxejFEUDREVzV6MFpyM1g0TmhGanB4?oc=5",
+          "citation_id": "RELIANCE_N2"
+        },
+        {
+          "title": "Reliance Industries Promoters Buy 4.26 Lakh Shares as Stock Rebounds Nearly 14% in a Month",
+          "source": "Kotak Neo",
+          "published": "Fri, 20 Nov 2026 11:56:34 GMT",
+          "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxQQnhERFRHTmt4bVAwRDlDUTYtMWVIeFRkekNMWmpGbjRWWWE1Nng1RVhPM1p2czRoam04WnZNenJqc1F0UFJSdU9NdXFVdXV3Mk1JNG05aDFVbGNkR215OEZ1czlGV09xVmpZTkg1eUM4WmE0SWtfSEdqbDVyczRUYXl5WE9ydU04Wk9pOFpR?oc=5",
+          "citation_id": "RELIANCE_N3"
+        },
+        {
+          "title": "Reliance (NSEI:RELIANCE) Stock Seems Overvalued After Its $1.6B Biogas Bet",
+          "source": "Simply Wall St",
+          "published": "Sat, 21 Nov 2026 05:12:33 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxQYVZCeExONWtZeDF3TG1zYUxRSTBmYVVzcHd3NlZNNjZwbnZ3cnpDZl96QVhPdU42NDAwU3lNLS1BWE8wdEt4ajhkN2VvRVFfZXUyR1hRbHJnZDVhNUxLYTFvRWh3Rk1wb1dmOEtlaXRQTldKWmxFYUlrU1AxTjJfLVpHdEtQOTZVYWt5SzRyektwcUFRVF9DN3AtUlRDS3p2SV9ydlJHNkFSMWtmRnFNM3ZWWHFmU2dTdkhvb1lpem1yS2dwdlc5ekwyampWRjJSMEM0MmszajBkMENjbzczWnJR0gHiAUFVX3lxTFBhVkJ4TE41a1l4MXdMbXNhTFFJMGZhVXNwd3c2Vk02NnBudndyekNmX3pBWE91TjY0MDBTeU0tLUFYTzB0S3hqOGQ3ZW9FUV9ldTJHWFFscmdkNWE1TEthMW9FaHdGTXBvV2Y4S2VpdFBOV0pabEVhSWtTUDFOMl8tWkd0S1A5NlVha3lLNHJ6S3BxQVFUX0M3cC1SVENLenZJX3J2Ukc2QVIxa2ZGcU0zdlZYcWZTZ1N2SG9vWWl6bXJLZ3B2Vzl6TDJqalZGMlIwQzQyazNqMGQwQ2NvNzNaclE?oc=5",
+          "citation_id": "RELIANCE_N4"
+        },
+        {
+          "title": "Jio Platforms Ltd. Share Price Today - Jio Platforms Ltd. Stock Price Live NSE/BSE",
+          "source": "CNBC TV18",
+          "published": "Fri, 20 Nov 2026 10:00:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxPb2FMZmtIMW5LTWFVY1ZuT2FiMkVmdlF1eGxXNnpRdHE2VkJZSHc5YWZKRXhOWFZDQW81UVNvekxrUzlCN3hLakZsS1VEclFheGdxeUxKc3h4Qms2M3hOOHAxVVR2UWdUeHl5MFRWRFBtSHhqV2hUUXRBZVNGS1JKVlRn?oc=5",
+          "citation_id": "RELIANCE_N5"
+        }
+      ],
+      "fetched_at_utc": "2026-11-21T19:37:13.004823+00:00"
+    },
+    "BHARTIARTL.NS": {
+      "ticker": "BHARTIARTL.NS",
+      "company_name": "Bharti Airtel Limited",
+      "status": "ok",
+      "article_count": 0,
+      "articles": [],
+      "fetched_at_utc": "2026-11-21T19:37:13.988309+00:00"
+    },
+    "LT.NS": {
+      "ticker": "LT.NS",
+      "company_name": "Larsen & Toubro Limited",
+      "status": "ok",
+      "article_count": 5,
+      "articles": [
+        {
+          "title": "Larsen & Toubro Share Price - Live NSE: LT Stock Price & Chart",
+          "source": "Upstox",
+          "published": "Fri, 20 Nov 2026 10:21:20 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE9kVmU3ankyakd3LWZkTXJmN2xacmxRYlhfdjZlWmpWUzRKYjFZS1IzZ1RuOUxaSHVhS05NWHNGUVRKNTZ4VWEzc3V4RjdoMlJsWUNDSW5fY0hLZGR2bDN0TDM2Q1hYV2M?oc=5",
+          "citation_id": "LT_N1"
+        },
+        {
+          "title": "LTFOODS Share Price Today - LT Foods on NSE/BSE",
+          "source": "scanx.trade",
+          "published": "Fri, 20 Nov 2026 19:05:05 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE5UekM5THNtbUtIb3ZCMDFyckNCRUV6YTR1YmR3ek5MZkFwMi11QmdUYW40Xzg5ZVRLN2xRQU41MzZYOEl3V1RrOWhWLXNHR0xjRXNQUXc1RGVsdFE?oc=5",
+          "citation_id": "LT_N2"
+        },
+        {
+          "title": "Indian IT Stocks Rally 1.96% as TCS, Infosys and Tech Mahindra Gain Despite Global Tech Selloff",
+          "source": "Kotak Neo",
+          "published": "Fri, 20 Nov 2026 06:01:24 GMT",
+          "url": "https://news.google.com/rss/articles/CBMixgFBVV95cUxPaDRqMm9KUnNXRi1pUXRYN0VhQl9XbFgwMDRmLXltc3RWZ0xKZHZpYjAyZlhmYnlNYzJORmdUZS14UmtIdWFNS0lUOGRYaHptWG01S21ncWFLZXBxakhlNS1LQlp4VTNxdnNnMk9ZVGxOSkVUcHkyZXJpNzViU3QtUzlUNzdiQmdnVTFNZGFCQVlSQ0IzaHI4UDJDYWVSZjZId0J6ZEhVbUR6OFJUUW1MeWVBUlVlU1NzT0ZsY25GZTc4MWpCZXc?oc=5",
+          "citation_id": "LT_N3"
+        },
+        {
+          "title": "RVNL Share Price Today - Rail Vikas Nigam on NSE/BSE",
+          "source": "scanx.trade",
+          "published": "Sat, 21 Nov 2026 10:09:44 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE1rZkdGNXlUQUJCV2t3VTJhQ2d6U0l0aDZfQXNlcTdpRWlsdmRwcUFVXzQ3QTR2MGhwNUNfcWczdDE1TVNhWXJmRHJCUTc2b2dJYks1dnF5blM3STlW?oc=5",
+          "citation_id": "LT_N4"
+        },
+        {
+          "title": "Nifty IT jumps over 1% as TCS, Tech Mahindra, HCL Tech gain; Indian IT stocks buck global AI selloff",
+          "source": "Moneycontrol.com",
+          "published": "Fri, 20 Nov 2026 04:21:18 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxPVjVnUkxrQ3F6bzNQdnZHUTRHUndNOVBNQ2FabENUVHhubERiNW52MExQOFdlOW8tMURJZnJSNV9XNUxjMUhLR3lXYVdkYzVfc1VfenZjUDVrUTVtckVVeTZVLThNYkczcHFPcjJHdWxocUtyTktld0ozVV81dTlhOEY0N01ETVVjQkwxNEYyY1pKTm8ybnQ1LWhJTEpLS2lReUpEdGpjc29jOVlhal9lVmM1OUlUOGdOeGZSZWdsTlNXVHY5OGpEZmp1UFdZM2tiQWNTUXRzTUU3YjNfc08xUDJsMTZXU05vcDhOQ0I5SjFFUTTSAfgBQVVfeXFMTXk0VE1MeExLSkpvQWNfLWh1cW45VEFVTlJMN19KVlJ0ekFlZ1hkbzhDX3VzbDVoREI4SHBXRGxIdmo4X2w0Y0NCd2h3dTJyUEFmaDFTOUZaVW4wempjc1lkVGIyN082OU5sanB4UW51M0NPVVZHeWFFM0dFck95NXFnanJvN1VTVWNiYnlQZGNEUGdhTWNVeDA0VktPdGwzYlJVenJqaVptTW9Ha2tRNEtYMXFQQTlQTnpYNmlLVmw4S3gwYlhSV2ZaNFhoTm1sVmJQNGF2Q25hRnpwTGY4QmxaSXg4VVktNkJaZjdDZzlsNnJfb19GeVQ?oc=5",
+          "citation_id": "LT_N5"
+        }
+      ],
+      "fetched_at_utc": "2026-11-21T19:37:14.821817+00:00"
+    }
+  }
+}

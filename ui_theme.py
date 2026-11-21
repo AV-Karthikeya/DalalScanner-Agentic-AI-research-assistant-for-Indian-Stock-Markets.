@@ -1,5 +1,4 @@
-﻿
-import re
+﻿import re
 import streamlit as st
 
 
@@ -8,7 +7,7 @@ EDUPLEX_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* =========================================================
-   1. GLOBAL THEME
+1. GLOBAL THEME
    ========================================================= */
 
 html, body, [class*="css"], .stApp {
@@ -19,7 +18,7 @@ html, body, [class*="css"], .stApp {
 }
 
 .block-container {
-    padding-top: 5rem !important;
+    padding-top: 2.75rem !important;
     padding-bottom: 2.5rem;
     max-width: 1420px;
 }
@@ -28,8 +27,6 @@ html, body, [class*="css"], .stApp {
     background-color: #F6F7FB !important;
     color: #181920 !important;
 }
-
-/* Stronger main content typography */
 
 [data-testid="stMain"] h1,
 [data-testid="stMain"] h2,
@@ -41,22 +38,43 @@ html, body, [class*="css"], .stApp {
 
 [data-testid="stMain"] p,
 [data-testid="stMain"] li,
-[data-testid="stMain"] label {
-    color: #252936;
-}
-
-[data-testid="stMain"] [data-testid="stCaptionContainer"],
-[data-testid="stMain"] .stCaption {
-    color: #586174 !important;
+[data-testid="stMain"] label,
+[data-testid="stMain"] [data-testid="stWidgetLabel"],
+[data-testid="stMain"] [data-testid="stWidgetLabel"] *,
+[data-testid="stMain"] [data-testid="stPills"] label,
+[data-testid="stMain"] [data-testid="stPills"] label * {
+    color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
+    opacity: 1 !important;
 }
 
 [data-testid="stMain"] [data-testid="stWidgetLabel"] p {
-    color: #0B0C10 !important;
+    color: #181920 !important;
     font-weight: 600 !important;
 }
 
+[data-testid="stMain"] [data-testid="stCaptionContainer"],
+[data-testid="stMain"] [data-testid="stCaptionContainer"] p,
+[data-testid="stMain"] .stCaption {
+    color: #454B5A !important;
+    -webkit-text-fill-color: #454B5A !important;
+    opacity: 1 !important;
+    font-weight: 500 !important;
+}
+
+/* Inline code tags (e.g. [HDFCBANK_N5], yfinance) */
+[data-testid="stMain"] code {
+    background-color: #E9ECF5 !important;
+    color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
+    border: 1px solid #D2D8E8 !important;
+    border-radius: 6px !important;
+    padding: 0.1rem 0.38rem !important;
+    font-size: 0.82em !important;
+}
+
 /* =========================================================
-   2. SIDEBAR
+2. SIDEBAR
    ========================================================= */
 
 section[data-testid="stSidebar"] {
@@ -73,8 +91,6 @@ section[data-testid="stSidebar"] .block-container {
 section[data-testid="stSidebar"] * {
     color: #A1A5B7;
 }
-
-/* Brand */
 
 .ds-brand {
     display: flex;
@@ -104,26 +120,19 @@ section[data-testid="stSidebar"] * {
     letter-spacing: -0.02em;
 }
 
-/* Watchlist Queue Label — Improved Contrast */
-div[data-testid="stCaptionContainer"],
-div[data-testid="stCaptionContainer"] p {
-    color: #454B5A !important;
-    opacity: 1 !important;
-    font-weight: 600 !important;
-}
-
 /* =========================================================
-   3. SIDEBAR PILL NAVIGATION
-   Uses st.pills() instead of st.radio()
+3. SIDEBAR PILL NAVIGATION
    ========================================================= */
 
 section[data-testid="stSidebar"] div[data-testid="stPills"] {
     width: 100% !important;
 }
 
-section[data-testid="stSidebar"] div[data-testid="stPills"] > div {
+section[data-testid="stSidebar"] div[data-testid="stPills"] > div,
+section[data-testid="stSidebar"] div[data-testid="stPills"] > div > div {
     display: flex !important;
     flex-direction: column !important;
+    flex-wrap: nowrap !important;
     align-items: stretch !important;
     gap: 7px !important;
     width: 100% !important;
@@ -131,6 +140,7 @@ section[data-testid="stSidebar"] div[data-testid="stPills"] > div {
 
 section[data-testid="stSidebar"] div[data-testid="stPills"] button {
     width: 100% !important;
+    max-width: 100% !important;
     justify-content: flex-start !important;
     text-align: left !important;
     background-color: transparent !important;
@@ -138,6 +148,7 @@ section[data-testid="stSidebar"] div[data-testid="stPills"] button {
     border-radius: 13px !important;
     padding: 0.65rem 0.9rem !important;
     color: #C2C6D2 !important;
+    -webkit-text-fill-color: #C2C6D2 !important;
     font-weight: 500 !important;
     box-shadow: none !important;
     transition: all 0.18s ease !important;
@@ -146,22 +157,26 @@ section[data-testid="stSidebar"] div[data-testid="stPills"] button {
 section[data-testid="stSidebar"] div[data-testid="stPills"] button:hover {
     background-color: rgba(255,255,255,0.08) !important;
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
 }
 
-/* Active navigation pill */
-
-section[data-testid="stSidebar"] div[data-testid="stPills"] button[aria-pressed="true"] {
+section[data-testid="stSidebar"] div[data-testid="stPills"] button[aria-pressed="true"],
+section[data-testid="stSidebar"] div[data-testid="stPills"] button[aria-checked="true"],
+section[data-testid="stSidebar"] div[data-testid="stPills"] button[data-testid="stBaseButton-pillsActive"] {
     background-color: #D9F26B !important;
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
     border-color: #D9F26B !important;
     font-weight: 700 !important;
 }
 
-section[data-testid="stSidebar"] div[data-testid="stPills"] button[aria-pressed="true"] * {
+section[data-testid="stSidebar"] div[data-testid="stPills"] button[aria-pressed="true"] *,
+section[data-testid="stSidebar"] div[data-testid="stPills"] button[aria-checked="true"] *,
+section[data-testid="stSidebar"] div[data-testid="stPills"] button[data-testid="stBaseButton-pillsActive"] * {
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
+    font-weight: 700 !important;
 }
-
-/* Sidebar expanders */
 
 section[data-testid="stSidebar"] details summary {
     color: #E5E7EB !important;
@@ -172,7 +187,7 @@ section[data-testid="stSidebar"] details summary:hover {
 }
 
 /* =========================================================
-   4. SIDEBAR PROMO CARD
+4. SIDEBAR PROMO CARD
    ========================================================= */
 
 .ds-sidebar-promo {
@@ -198,7 +213,7 @@ section[data-testid="stSidebar"] details summary:hover {
 }
 
 /* =========================================================
-   5. CARDS AND CONTAINERS
+5. CARDS AND CONTAINERS
    ========================================================= */
 
 div[data-testid="stVerticalBlockBorderWrapper"] > div {
@@ -210,10 +225,8 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
 }
 
 /* =========================================================
-   6. BUTTONS
+6. BUTTONS & POPOVER TRIGGERS
    ========================================================= */
-
-/* Primary buttons */
 
 .stApp button[kind="primary"],
 .stApp button[data-testid="stBaseButton-primary"] {
@@ -221,6 +234,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
     border: 1px solid #C8E452 !important;
     border-radius: 999px !important;
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
     font-weight: 700 !important;
     box-shadow: none !important;
 }
@@ -229,9 +243,8 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
 .stApp button[data-testid="stBaseButton-primary"]:hover {
     background-color: #CBE94F !important;
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
 }
-
-/* Secondary buttons */
 
 .stApp button[kind="secondary"],
 .stApp button[data-testid="stBaseButton-secondary"] {
@@ -239,6 +252,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
     border: 1px solid #DDE1EB !important;
     border-radius: 999px !important;
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
     font-weight: 600 !important;
     box-shadow: none !important;
 }
@@ -248,50 +262,64 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
     background-color: #F0F2F8 !important;
     border-color: #181920 !important;
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
 }
 
-/* Popover buttons, including Save list */
-
-.stApp div[data-testid="stPopover"] > button {
+.stApp div[data-testid="stPopover"] button,
+.stApp [data-testid="stMain"] div[data-testid="stPopover"] button,
+.stApp [data-testid="stMain"] div[data-testid="stPopover"] > div > button {
     background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
     border: 1px solid #DDE1EB !important;
     border-radius: 999px !important;
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
     font-weight: 600 !important;
     box-shadow: none !important;
 }
 
-.stApp div[data-testid="stPopover"] > button:hover {
+.stApp div[data-testid="stPopover"] button *,
+.stApp [data-testid="stMain"] div[data-testid="stPopover"] button * {
+    color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
+}
+
+.stApp div[data-testid="stPopover"] button:hover,
+.stApp [data-testid="stMain"] div[data-testid="stPopover"] button:hover {
     background-color: #F0F2F8 !important;
+    background: #F0F2F8 !important;
     border-color: #181920 !important;
     color: #181920 !important;
 }
 
-/* Popover content */
-
-div[data-testid="stPopoverBody"] {
+div[data-testid="stPopoverBody"],
+div[data-baseweb="popover"] > div {
     background-color: #FFFFFF !important;
     color: #181920 !important;
     border: 1px solid #E5E8F0 !important;
     border-radius: 16px !important;
 }
 
-/* Disabled buttons */
+div[data-testid="stPopoverBody"] * {
+    color: #181920 !important;
+}
 
 .stApp button:disabled {
     background-color: #E9EBF1 !important;
     color: #747B8C !important;
+    -webkit-text-fill-color: #747B8C !important;
     border-color: #E0E3EA !important;
     opacity: 0.85 !important;
 }
 
 /* =========================================================
-   7. INPUTS AND SELECTBOXES
+7. INPUTS AND SELECTBOXES
    ========================================================= */
 
 [data-testid="stMain"] input,
 [data-testid="stMain"] textarea {
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
     background-color: #FFFFFF !important;
 }
 
@@ -300,16 +328,64 @@ div[data-testid="stPopoverBody"] {
 [data-testid="stMain"] textarea {
     border-color: #D9DDE8 !important;
     background-color: #FFFFFF !important;
+    border-radius: 12px !important;
 }
 
 [data-testid="stMain"] [data-baseweb="select"] *,
 [data-testid="stMain"] [data-baseweb="input"] * {
     color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
+}
+
+[data-testid="stMain"] input::placeholder,
+[data-testid="stMain"] textarea::placeholder,
+[data-testid="stMain"] [data-baseweb="select"] [class*="placeholder"] {
+    color: #6E7387 !important;
+    -webkit-text-fill-color: #6E7387 !important;
+    opacity: 1 !important;
 }
 
 /* =========================================================
-   8. HEADER AND STATUS
+8. HEADER AND STATUS
    ========================================================= */
+.ds-top-banner {
+    background-color: #FFFFFF;
+    border: 1px solid #ECEEF4;
+    border-radius: 20px;
+    padding: 0.9rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(24,25,32,0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.ds-agent-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background-color: #181920;
+    color: #D9F26B !important;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.24rem 0.65rem;
+    border-radius: 999px;
+}
+
+.ds-meta-chip {
+    display: inline-block;
+    background-color: #F6F7FB;
+    border: 1px solid #E5E8F0;
+    color: #181920 !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+}
 
 .ds-title {
     font-size: 1.75rem;
@@ -327,7 +403,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   9. INDEX CARDS
+9. INDEX CARDS
    ========================================================= */
 
 .ed-course-card {
@@ -394,7 +470,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   10. DARK HERO CARD
+10. DARK HERO CARD
    ========================================================= */
 
 .ed-dark-hero {
@@ -402,6 +478,7 @@ div[data-testid="stPopoverBody"] {
     border-radius: 22px;
     padding: 1.25rem 1.3rem;
     color: #FFFFFF !important;
+    margin-top: 0.45rem;
     margin-bottom: 0.85rem;
 }
 
@@ -429,7 +506,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   11. MINI CARDS
+11. MINI CARDS
    ========================================================= */
 
 .ed-mini-card {
@@ -442,7 +519,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   12. KPI CARDS
+12. KPI CARDS
    ========================================================= */
 
 .ds-kpi-card {
@@ -491,7 +568,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   13. RISK PLANNER CARDS
+13. RISK PLANNER CARDS
    ========================================================= */
 
 .rp-card {
@@ -541,7 +618,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   14. RISK PLANNER STEPPER
+14. RISK PLANNER STEPPER
    ========================================================= */
 
 .ds-stepper {
@@ -585,7 +662,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   15. GAIN, LOSS AND VERIFICATION BADGES
+15. GAIN, LOSS AND VERIFICATION BADGES
    ========================================================= */
 
 .ds-gain {
@@ -622,7 +699,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   16. BRIEF CARDS
+16. BRIEF CARDS
    ========================================================= */
 
 .ds-flat-card {
@@ -647,16 +724,115 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   17. DATA TABLES
+17. HIGH-CONTRAST ALERTS, EXPANDERS & DATAFRAMES
    ========================================================= */
 
 [data-testid="stMain"] [data-testid="stDataFrame"] {
+    background-color: #FFFFFF !important;
     border: 1px solid #E5E8F0 !important;
     border-radius: 12px !important;
 }
 
+[data-testid="stMain"] div[data-testid="stAlert"],
+[data-testid="stMain"] [data-testid="stNotification"] {
+    background-color: #EEF2FF !important;
+    color: #1E293B !important;
+    border: 1px solid #C7D2FE !important;
+    border-radius: 14px !important;
+}
+
+[data-testid="stMain"] div[data-testid="stAlert"] > div,
+[data-testid="stMain"] [data-testid="stNotification"] > div {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+[data-testid="stMain"] div[data-testid="stAlert"] p,
+[data-testid="stMain"] div[data-testid="stAlert"] span,
+[data-testid="stMain"] div[data-testid="stAlert"] div {
+    color: #1E293B !important;
+    -webkit-text-fill-color: #1E293B !important;
+    opacity: 1 !important;
+}
+
+/* Success alert */
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]),
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconSuccess"]),
+[data-testid="stMain"] div[data-testid="stAlert"][data-baseweb="notification"]:has([data-testid="stAlertContentSuccess"]) {
+    background-color: #DCFCE7 !important;
+    background: #DCFCE7 !important;
+    border-color: #86EFAC !important;
+}
+
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) *,
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconSuccess"]) *,
+[data-testid="stMain"] div[data-testid="stAlert"][data-baseweb="notification"]:has([data-testid="stAlertContentSuccess"]) * {
+    color: #14532D !important;
+    -webkit-text-fill-color: #14532D !important;
+    opacity: 1 !important;
+}
+
+/* Warning alert */
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]),
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconWarning"]) {
+    background-color: #FEF3C7 !important;
+    background: #FEF3C7 !important;
+    border-color: #FCD34D !important;
+}
+
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) *,
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconWarning"]) * {
+    color: #78350F !important;
+    -webkit-text-fill-color: #78350F !important;
+    opacity: 1 !important;
+}
+
+/* Error alert */
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentError"]),
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconError"]) {
+    background-color: #FEE2E2 !important;
+    background: #FEE2E2 !important;
+    border-color: #FCA5A5 !important;
+}
+
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentError"]) *,
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconError"]) * {
+    color: #7F1D1D !important;
+    -webkit-text-fill-color: #7F1D1D !important;
+    opacity: 1 !important;
+}
+
+/* Info alert */
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]),
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconInfo"]) {
+    background-color: #E0F2FE !important;
+    background: #E0F2FE !important;
+    border-color: #7DD3FC !important;
+}
+
+[data-testid="stMain"] div[data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) *,
+[data-testid="stMain"] div[data-testid="stAlert"]:has(svg[data-testid="stIconInfo"]) * {
+    color: #0C4A6E !important;
+    -webkit-text-fill-color: #0C4A6E !important;
+    opacity: 1 !important;
+}
+
+/* Expander header & body in main area */
+[data-testid="stMain"] [data-testid="stExpander"] details,
+[data-testid="stMain"] [data-testid="stExpander"] summary {
+    background-color: #FFFFFF !important;
+    color: #181920 !important;
+    border-color: #E5E8F0 !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"] summary * {
+    color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
+    opacity: 1 !important;
+}
+
 /* =========================================================
-   18. ACCESSIBILITY AND FOCUS
+18. ACCESSIBILITY AND FOCUS
    ========================================================= */
 
 .stApp button:focus-visible,
@@ -666,7 +842,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   19. RESPONSIVE LAYOUT
+19. RESPONSIVE LAYOUT
    ========================================================= */
 
 @media (max-width: 768px) {
@@ -690,7 +866,7 @@ div[data-testid="stPopoverBody"] {
 }
 
 /* =========================================================
-   20. MAIN-AREA PILLS AND PLACEHOLDERS
+20. MAIN-AREA PILLS
    ========================================================= */
 
 [data-testid="stMain"] [data-testid="stPills"] button,
@@ -733,15 +909,6 @@ div[data-testid="stPopoverBody"] {
     border: 1px solid #181920 !important;
 }
 
-[data-testid="stMain"] [data-testid="stPills"] button[aria-pressed="true"],
-[data-testid="stMain"] [data-testid="stPills"] button[aria-checked="true"],
-[data-testid="stMain"] [data-testid="stPills"] button[data-testid="stBaseButton-pillsActive"],
-[data-testid="stMain"] [data-testid="stButtonGroup"] button[aria-pressed="true"],
-[data-testid="stMain"] [data-testid="stButtonGroup"] button[aria-checked="true"],
-[data-testid="stMain"] [data-testid="stButtonGroup"] button[data-testid="stBaseButton-pillsActive"],
-[data-testid="stMain"] button[data-testid^="stBaseButton-pills"][aria-pressed="true"],
-[data-testid="stMain"] button[data-testid^="stBaseButton-pills"][aria-checked="true"],
-[data-testid="stMain"] button[data-testid^="stBaseButton-pills"][data-testid="stBaseButton-pillsActive"],
 [data-testid="stMain"] [data-testid="stPills"] button[aria-pressed="true"] *,
 [data-testid="stMain"] [data-testid="stPills"] button[aria-checked="true"] *,
 [data-testid="stMain"] [data-testid="stPills"] button[data-testid="stBaseButton-pillsActive"] *,
@@ -756,50 +923,54 @@ div[data-testid="stPopoverBody"] {
     font-weight: 700 !important;
 }
 
-[data-testid="stMain"] input::placeholder,
-[data-testid="stMain"] textarea::placeholder {
-    color: #8A90A3 !important;
-    -webkit-text-fill-color: #8A90A3 !important;
-    opacity: 1 !important;
-}
-
 /* =========================================================
-   21. TOP HEADER BAR (Deploy / menu)
+21. TOP HEADER BAR (Deploy / menu)
    ========================================================= */
 
 header[data-testid="stHeader"],
 [data-testid="stHeader"] {
-    background-color: #181920 !important;   /* header colour (matches sidebar) */
+    background-color: #F6F7FB !important;
+    border-bottom: 1px solid #ECEEF4 !important;
 }
 
-header *,
-[data-testid="stToolbar"],
+header[data-testid="stHeader"] *,
 [data-testid="stToolbar"] *,
 [data-testid="stToolbarActions"] *,
-[data-testid="stAppDeployButton"],
 [data-testid="stAppDeployButton"] *,
-[data-testid="stMainMenu"],
-[data-testid="stMainMenu"] *,
-.stDeployButton,
-.stDeployButton * {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
+[data-testid="stMainMenu"] * {
+    color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
     opacity: 1 !important;
 }
 
 [data-testid="stToolbar"] svg,
 [data-testid="stMainMenu"] svg {
     fill: none !important;
-    stroke: #FFFFFF !important;
+    stroke: #181920 !important;
 }
 
-[data-testid="stMainMenu"] button {
+/* =========================================================
+22. HIGH-CONTRAST JSON VIEWER (Main & Popovers)
+   ========================================================= */
+
+[data-testid="stJson"],
+[data-testid="stPopoverBody"] [data-testid="stJson"],
+[data-testid="stMain"] [data-testid="stJson"] {
+    background-color: #F8FAFC !important;
+    background: #F8FAFC !important;
+    border: 1px solid #DCE1EE !important;
+    border-radius: 12px !important;
+    padding: 0.75rem !important;
+}
+
+[data-testid="stJson"] *,
+[data-testid="stPopoverBody"] [data-testid="stJson"] *,
+[data-testid="stMain"] [data-testid="stJson"] * {
+    color: #181920 !important;
+    -webkit-text-fill-color: #181920 !important;
     background-color: transparent !important;
-}
-
-[data-testid="stAppDeployButton"]:hover,
-[data-testid="stMainMenu"] button:hover {
-    background-color: rgba(255,255,255,0.16) !important;
+    background: transparent !important;
+    opacity: 1 !important;
 }
 
 </style>
