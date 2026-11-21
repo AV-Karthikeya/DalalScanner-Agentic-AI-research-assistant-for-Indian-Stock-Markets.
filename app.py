@@ -2,17 +2,26 @@ from datetime import datetime, timezone, timedelta
 import io
 import json
 from pathlib import Path
+import re
 import pandas as pd
 import requests
 import streamlit as st
 import yfinance as yf
 
+from ui_theme import (
+    apply_theme,
+    strip_emoji,
+    render_delta_text,
+    render_course_index_card,
+    render_stat_card,
+    render_risk_stepper,
+    render_verification_badge,
+)
 from run_pipeline import run_daily_pipeline
 from screener_engine import run_unified_radar, explain_radar_scan
 from backtest_engine import STRATEGY_SPECS, run_strategy_backtest, generate_ai_backtest_insights
 from risk_planner import (
     get_last_close_price,
-    get_trade_idea_defaults,
     calculate_position_plan,
     allocate_equal_risk_portfolio,
     project_portfolio_returns,
@@ -22,30 +31,24 @@ from nse_filings_engine import get_nse_filings
 from report_analyzer import analyze_pdf_report
 
 st.set_page_config(
-    page_title="Verified NSE / BSE Equity & Index Brief Agent",
-    page_icon="📈",
+    page_title="DalalScanner — NSE/BSE Research Workbench",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
+apply_theme()
 
 st.markdown(
     """
     <style>
-    .block-container { padding-top: 1.75rem; padding-bottom: 2rem; }
-    div[data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 0.7rem 0.95rem;
-        border-radius: 0.6rem;
-    }
     .step-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 22px;
         height: 22px;
-        border-radius: 50%;
-        background-color: #ef4444;
-        color: #ffffff;
+        border-radius: 999px;
+        background-color: #D9F26B;
+        color: #181920;
         font-size: 12px;
         font-weight: 700;
         margin-right: 8px;
@@ -53,30 +56,9 @@ st.markdown(
     }
     .step-title {
         font-size: 15px;
-        font-weight: 600;
-        vertical-align: middle;
-    }
-    .rp-card {
-        background-color: rgba(255, 255, 255, 0.025);
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 10px;
-        padding: 14px 16px;
-        height: 100%;
-    }
-    .rp-card-label {
-        font-size: 12px;
-        opacity: 0.72;
-        margin-bottom: 6px;
-    }
-    .rp-card-val {
-        font-size: 24px;
         font-weight: 700;
-        line-height: 1.2;
-        margin-bottom: 6px;
-    }
-    .rp-card-sub {
-        font-size: 12px;
-        opacity: 0.7;
+        color: #181920;
+        vertical-align: middle;
     }
     </style>
     """,
@@ -99,8 +81,10 @@ MAJOR_INDICES = {
 }
 
 BUILT_IN_PACKS: dict[str, dict] = {
-    "🏆 Nifty 50 Top 5": {
-        "meta": "Weights as of Nov 2026: HDFCBANK (~10.5%), ICICIBANK (~8.8%), RELIANCE (~7.5%), BHARTIARTL (~5.1%), LT (~4.2%)",
+    "Nifty 50 Top 5": {
+        "source": "NSE Index Factsheet",
+        "as_of": "Nov 2026",
+        "weights_caption": "Top 5 Nifty 50 constituents by index weight (NSE factsheet, Nov 2026).",
         "items": [
             "HDFC Bank Limited (HDFCBANK)",
             "ICICI Bank Limited (ICICIBANK)",
@@ -109,8 +93,10 @@ BUILT_IN_PACKS: dict[str, dict] = {
             "Larsen & Toubro Limited (LT)",
         ],
     },
-    "🏦 Bank Nifty Top 5": {
-        "meta": "Weights as of Nov 2026: HDFCBANK (~28%), ICICIBANK (~24%), SBIN (~11%), KOTAKBANK (~10%), AXISBANK (~9%)",
+    "Bank Nifty Top 5": {
+        "source": "NSE Index Factsheet",
+        "as_of": "Nov 2026",
+        "weights_caption": "Top 5 Nifty Bank constituents by index weight (NSE factsheet, Nov 2026).",
         "items": [
             "HDFC Bank Limited (HDFCBANK)",
             "ICICI Bank Limited (ICICIBANK)",
@@ -119,8 +105,10 @@ BUILT_IN_PACKS: dict[str, dict] = {
             "State Bank of India (SBIN)",
         ],
     },
-    "💻 Nifty IT Top 5": {
-        "meta": "Weights as of Nov 2026: INFY (~27%), TCS (~25%), HCLTECH (~10%), TECHM (~9%), WIPRO (~8%)",
+    "Nifty IT Top 5": {
+        "source": "NSE Index Factsheet",
+        "as_of": "Nov 2026",
+        "weights_caption": "Top 5 Nifty IT constituents by index weight (NSE factsheet, Nov 2026).",
         "items": [
             "Infosys Limited (INFY)",
             "Tata Consultancy Services Limited (TCS)",
@@ -129,8 +117,10 @@ BUILT_IN_PACKS: dict[str, dict] = {
             "Wipro Limited (WIPRO)",
         ],
     },
-    "📊 Headline Indices": {
-        "meta": "Benchmark & Sector Indices: NIFTY 50, BSE SENSEX, NIFTY BANK, NIFTY IT, INDIA VIX",
+    "Headline Indices": {
+        "source": "NSE / BSE Benchmarks",
+        "as_of": "Nov 2026",
+        "weights_caption": "Benchmark & volatility indices: NIFTY 50, BSE SENSEX, NIFTY BANK, NIFTY IT, INDIA VIX.",
         "items": [
             "NIFTY 50 (Index)",
             "BSE SENSEX (Index)",
@@ -149,44 +139,75 @@ def load_report() -> dict | None:
         return json.load(f)
 
 
-def format_ist_timestamp(utc_iso: str) -> str:
+def format_ist_short(utc_iso: str) -> str:
     try:
         dt_utc = datetime.fromisoformat(utc_iso.replace("Z", "+00:00"))
         if dt_utc.tzinfo is None:
             dt_utc = dt_utc.replace(tzinfo=timezone.utc)
         dt_ist = dt_utc.astimezone(IST)
-        return dt_ist.strftime("%d %b %Y, %I:%M %p IST")
+        return dt_ist.strftime("%d %b, %I:%M %p IST").lstrip("0")
     except Exception:
         return utc_iso
 
 
-def market_status_label() -> str:
+def market_status_short() -> str:
     now_ist = datetime.now(IST)
     if now_ist.weekday() >= 5:
-        return "Weekend — market closed, showing last close"
+        return "Market closed (weekend) · last close"
     minutes = now_ist.hour * 60 + now_ist.minute
     if 9 * 60 + 15 <= minutes <= 15 * 60 + 30:
-        return "Market open (quotes delayed ~15 min)"
-    return "Market closed — showing last close"
+        return "Market open · live session"
+    return "Market closed · last close"
+
+
+def verify_backtest_notes(notes_text: str, bt_res: dict) -> dict:
+    """Verify numeric tokens in Backtest AI notes against deterministic backtest output."""
+    allowed_numbers: set[float] = set()
+    for val in bt_res.values():
+        if isinstance(val, (int, float)) and not isinstance(val, bool):
+            allowed_numbers.add(round(float(val), 2))
+            allowed_numbers.add(round(abs(float(val)), 2))
+
+    raw_tokens = re.findall(r"(?<![A-Za-z0-9_])[-+]?\d[\d,]*(?:\.\d+)?", notes_text or "")
+    checked = 0
+    mismatches: list[str] = []
+    for tok in raw_tokens:
+        cleaned = tok.replace(",", "")
+        try:
+            num = float(cleaned)
+        except ValueError:
+            continue
+        if num in {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 20.0, 100.0}:
+            continue
+        checked += 1
+        matched = any(abs(num - ref) <= max(0.05, abs(ref) * 0.015) for ref in allowed_numbers)
+        if not matched:
+            mismatches.append(tok)
+
+    return {
+        "passed": len(mismatches) == 0,
+        "checked_count": checked,
+        "mismatches": mismatches,
+    }
 
 
 @st.cache_data(ttl=300, show_spinner=False)
 def load_market_pulse() -> list[dict]:
     pulse_tickers = [
-        ("^NSEI", "NIFTY 50"),
-        ("^BSESN", "BSE SENSEX"),
-        ("^NSEBANK", "NIFTY BANK"),
-        ("^INDIAVIX", "INDIA VIX"),
+        ("^NSEI", "NIFTY 50", "NSE"),
+        ("^BSESN", "SENSEX", "BSE"),
+        ("^NSEBANK", "NIFTY BANK", "Sector"),
+        ("^INDIAVIX", "INDIA VIX", "Volatility"),
     ]
     results = []
-    for sym, label in pulse_tickers:
+    for sym, label, tag in pulse_tickers:
         try:
             hist = yf.Ticker(sym).history(period="5d")
             if len(hist) >= 2:
                 close_val = float(hist["Close"].iloc[-1])
                 prev_val = float(hist["Close"].iloc[-2])
                 pct = ((close_val - prev_val) / prev_val) * 100
-                results.append({"label": label, "value": close_val, "pct": pct})
+                results.append({"label": label, "value": close_val, "pct": pct, "tag": tag})
         except Exception:
             continue
     return results
@@ -233,11 +254,9 @@ def load_nse_universe() -> dict[str, str]:
 
 # --- Session State Initialization ---
 if "selected_watchlist" not in st.session_state:
-    st.session_state.selected_watchlist = list(BUILT_IN_PACKS["🏆 Nifty 50 Top 5"]["items"])
+    st.session_state.selected_watchlist = list(BUILT_IN_PACKS["Nifty 50 Top 5"]["items"])
 if "active_pack_meta" not in st.session_state:
-    st.session_state.active_pack_meta = (
-        f"**🏆 Nifty 50 Top 5** — {BUILT_IN_PACKS['🏆 Nifty 50 Top 5']['meta']}"
-    )
+    st.session_state.active_pack_meta = BUILT_IN_PACKS["Nifty 50 Top 5"]["weights_caption"]
 if "custom_watchlists" not in st.session_state:
     st.session_state.custom_watchlists = {}
 if "search_box_key" not in st.session_state:
@@ -257,11 +276,12 @@ if "risk_prefs" not in st.session_state:
 
 
 def short_chip_label(label: str) -> str:
-    if label.endswith("(Index)") or label.endswith("(Volatility Index)"):
-        return label.split(" (")[0]
-    if "(" in label and label.endswith(")"):
-        return label.rsplit("(", 1)[1].rstrip(")")
-    return label.upper()
+    clean = strip_emoji(label)
+    if clean.endswith("(Index)") or clean.endswith("(Volatility Index)"):
+        return clean.split(" (")[0]
+    if "(" in clean and clean.endswith(")"):
+        return clean.rsplit("(", 1)[1].rstrip(")")
+    return clean.upper()
 
 
 def resolve_queue_tickers(nse_options: dict[str, str]) -> list[str]:
@@ -286,12 +306,10 @@ def on_pack_pill_change():
     if selected in BUILT_IN_PACKS:
         pack = BUILT_IN_PACKS[selected]
         st.session_state.selected_watchlist = list(pack["items"])[:MAX_TICKERS_PER_RUN]
-        st.session_state.active_pack_meta = f"**{selected}** — {pack['meta']}"
-    elif selected.startswith("⭐ "):
-        wl_name = selected[2:]
-        if wl_name in st.session_state.custom_watchlists:
-            st.session_state.selected_watchlist = list(st.session_state.custom_watchlists[wl_name])[:MAX_TICKERS_PER_RUN]
-            st.session_state.active_pack_meta = f"**⭐ {wl_name}** (Custom Session Watchlist)"
+        st.session_state.active_pack_meta = pack["weights_caption"]
+    elif selected in st.session_state.custom_watchlists:
+        st.session_state.selected_watchlist = list(st.session_state.custom_watchlists[selected])[:MAX_TICKERS_PER_RUN]
+        st.session_state.active_pack_meta = f"{selected} (Saved session list)"
     st.session_state["pack_selector_pills"] = None
 
 
@@ -299,170 +317,225 @@ def on_queue_chip_change():
     clicked = st.session_state.get("active_queue_pills")
     if not clicked:
         return
-    if clicked == "🗑️ Clear All":
-        st.session_state.selected_watchlist = []
+    chip_map = {f"{short_chip_label(item)} ✕": item for item in st.session_state.selected_watchlist}
+    if clicked in chip_map:
+        st.session_state.selected_watchlist.remove(chip_map[clicked])
         st.session_state.active_pack_meta = ""
-    else:
-        chip_map = {f"✕ {short_chip_label(item)}": item for item in st.session_state.selected_watchlist}
-        if clicked in chip_map:
-            st.session_state.selected_watchlist.remove(chip_map[clicked])
-            st.session_state.active_pack_meta = ""
     st.session_state["active_queue_pills"] = None
 
 
 # --- Load Latest Saved Report Early ---
 report = load_report()
-last_run_ist = format_ist_timestamp(report["generated_at_utc"]) if report else "Not yet generated"
+last_run_ist = format_ist_short(report["generated_at_utc"]) if report else "not yet run"
 
-# --- Sidebar: Engine Telemetry, Guardrails & JSON Watchlist + Risk Backup ---
+# --- Left Dark Sidebar Rail (#181920) ---
 with st.sidebar:
-    st.header("⚙️ System & Guardrails")
     st.markdown(
-        f"**Last Brief Run:** {last_run_ist}\n\n"
-        f"**Session Status:** {market_status_label()}\n\n"
-        "**Model:** `openai/gpt-oss-120b` (Groq)\n\n"
-        "**Grounding:** Deterministic Numeric & Citation Verifier\n\n"
-        f"**Run Limits:** Max {MAX_TICKERS_PER_RUN} tickers/run • {COOLDOWN_SECONDS}s cooldown"
+        '<div class="ds-brand">'
+        '  <span class="ds-brand-mark">DS</span>'
+        '  <span class="ds-brand-name">DalalScanner</span>'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
-    st.divider()
-    st.subheader("📦 Watchlist & Risk Backup (JSON)")
-    st.caption("Watchlists and your Risk Plan preferences are saved in your session. Export to reuse anytime.")
-
-    export_payload = json.dumps(
-        {
-            "active_queue": st.session_state.selected_watchlist,
-            "custom_watchlists": st.session_state.custom_watchlists,
-            "risk_prefs": st.session_state.risk_prefs,
-        },
-        indent=2,
-    )
-    st.download_button(
-        label="⬇️ Export Watchlists & Settings (.json)",
-        data=export_payload,
-        file_name="nse_custom_watchlists.json",
-        mime="application/json",
-        width="stretch",
-    )
-
-    uploaded_wl = st.file_uploader(
-        "⬆️ Import Watchlists & Settings (.json)",
-        type=["json"],
-        label_visibility="collapsed",
-    )
-    if uploaded_wl is not None:
-        try:
-            imported = json.loads(uploaded_wl.read().decode("utf-8"))
-            if isinstance(imported.get("custom_watchlists"), dict):
-                st.session_state.custom_watchlists.update(imported["custom_watchlists"])
-            if isinstance(imported.get("active_queue"), list) and imported["active_queue"]:
-                st.session_state.selected_watchlist = imported["active_queue"][:MAX_TICKERS_PER_RUN]
-                st.session_state.active_pack_meta = "Loaded from imported watchlist JSON"
-            if isinstance(imported.get("risk_prefs"), dict):
-                st.session_state.risk_prefs.update(imported["risk_prefs"])
-            st.success("Watchlists & risk settings imported!")
-        except Exception:
-            st.error("Invalid watchlist JSON format.")
-
-    st.divider()
-    st.caption("⚠️ **Disclaimer:** Research assistance only, not investment advice.")
-
-
-# --- Main Dashboard Header ---
-st.title("📈 Verified NSE / BSE Equity & Index Brief Agent")
-st.caption(
-    f"Zero-hallucination daily market intelligence with numeric & citation verification  •  **Last run:** {last_run_ist}"
-)
-
-# --- Live Market Indices Pulse Bar ---
-pulse_data = load_market_pulse()
-vix_live = None
-if pulse_data:
-    pulse_cols = st.columns(len(pulse_data))
-    for col, idx_item in zip(pulse_cols, pulse_data):
-        if idx_item["label"] == "INDIA VIX":
-            vix_live = round(idx_item["value"], 2)
-        delta_color = "inverse" if idx_item["label"] == "INDIA VIX" else "normal"
-        col.metric(
-            label=idx_item["label"],
-            value=f"{idx_item['value']:,.2f}",
-            delta=f"{idx_item['pct']:+.2f}%",
-            delta_color=delta_color,
-        )
-    st.caption(f"⏱️ Pulse strip: {market_status_label()} (Yahoo Finance feed)")
-
-st.write("")
-
-# --- Clean Single-Line Search + Generate Action Bar ---
-nse_options = load_nse_universe()
-
-search_col, btn_col = st.columns([4, 1], vertical_alignment="bottom")
-with search_col:
-    picked = st.selectbox(
-        "🔍 Add Stock, Index, or BSE Ticker",
-        options=list(nse_options.keys()),
-        index=None,
-        accept_new_options=True,
-        key=f"search_select_{st.session_state.search_box_key}",
-        placeholder="Type NIFTY, Reliance, Tata, or RELIANCE.BO and press Enter...",
-    )
-    if picked:
-        if len(st.session_state.selected_watchlist) >= MAX_TICKERS_PER_RUN:
-            st.warning(f"Maximum {MAX_TICKERS_PER_RUN} instruments allowed per run. Remove a chip first.")
-        elif picked not in st.session_state.selected_watchlist:
-            st.session_state.selected_watchlist.append(picked)
-            st.session_state.active_pack_meta = ""
-        st.session_state.search_box_key += 1
-        st.rerun()
-
-with btn_col:
-    run_clicked = st.button("🔄 Generate Briefs", type="primary", width="stretch")
-
-# --- Combined Preset Packs & User Custom Watchlist Tabs ---
-all_tab_labels = list(BUILT_IN_PACKS.keys()) + [
-    f"⭐ {name}" for name in st.session_state.custom_watchlists.keys()
-]
-
-st.pills(
-    "⚡ Index Heavyweight Packs & Custom Watchlists (loads chips into queue):",
-    options=all_tab_labels,
+    active_view = st.pills(
+    "Navigation",
+    options=["Briefs", "Radar", "Backtest", "Risk Plan", "Filings"],
     selection_mode="single",
-    default=None,
-    key="pack_selector_pills",
-    on_change=on_pack_pill_change,
+    default="Briefs",
+    label_visibility="collapsed",
+    key="ds_nav_view",
+    width="stretch",
 )
+    
 
-# --- Active Queue Chips + Save Custom Watchlist Popover ---
-if st.session_state.selected_watchlist:
-    if st.session_state.active_pack_meta:
-        st.caption(st.session_state.active_pack_meta)
+    st.markdown(
+        f'<div class="ds-sidebar-promo">'
+        f'  <div class="ds-sidebar-promo-title">Verified NSE/BSE Briefs</div>'
+        f'  <div class="ds-sidebar-promo-sub">Queue: {len(st.session_state.selected_watchlist)}/{MAX_TICKERS_PER_RUN} active · Every figure checked against live OHLCV & exchange feeds.</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
-    queue_col, save_col = st.columns([4.2, 1.3], vertical_alignment="bottom")
-    with queue_col:
-        chip_options = [f"✕ {short_chip_label(item)}" for item in st.session_state.selected_watchlist] + ["🗑️ Clear All"]
+    st.write("")
+    with st.expander("About & guardrails", expanded=False):
+        st.markdown(
+            f"**Engine:** `openai/gpt-oss-120b` (Groq)\n\n"
+            "**Verification:** Deterministic numeric & citation checks.\n\n"
+            f"**Limits:** Max {MAX_TICKERS_PER_RUN} tickers · {COOLDOWN_SECONDS}s cooldown."
+        )
 
+    with st.expander("Watchlist backup (JSON)", expanded=False):
+        export_payload = json.dumps(
+            {
+                "active_queue": st.session_state.selected_watchlist,
+                "custom_watchlists": st.session_state.custom_watchlists,
+                "risk_prefs": st.session_state.risk_prefs,
+            },
+            indent=2,
+        )
+        st.download_button(
+            label="Export JSON",
+            data=export_payload,
+            file_name="dalalscanner_watchlists.json",
+            mime="application/json",
+            width="stretch",
+        )
+        uploaded_wl = st.file_uploader("Import JSON", type=["json"], label_visibility="collapsed")
+        if uploaded_wl is not None:
+            try:
+                imported = json.loads(uploaded_wl.read().decode("utf-8"))
+                if isinstance(imported.get("custom_watchlists"), dict):
+                    st.session_state.custom_watchlists.update(imported["custom_watchlists"])
+                if isinstance(imported.get("active_queue"), list) and imported["active_queue"]:
+                    st.session_state.selected_watchlist = imported["active_queue"][:MAX_TICKERS_PER_RUN]
+                    st.session_state.active_pack_meta = "Loaded from imported JSON"
+                if isinstance(imported.get("risk_prefs"), dict):
+                    st.session_state.risk_prefs.update(imported["risk_prefs"])
+                st.success("Imported.")
+            except Exception:
+                st.error("Invalid JSON.")
+
+# --- Eduplex Asymmetric Split: Main Left Canvas (2.45) + Right Action Rail (1.05) ---
+nse_options = load_nse_universe()
+pulse_data = load_market_pulse()
+vix_item = next((p for p in pulse_data if p["label"] == "INDIA VIX"), None)
+vix_live = round(vix_item["value"], 2) if vix_item else None
+index_cards = [p for p in pulse_data if p["label"] != "INDIA VIX"][:3]
+
+main_left, main_right = st.columns([2.45, 1.05], vertical_alignment="top")
+
+with main_left:
+    hdr_l, hdr_r = st.columns([1.4, 1.3], vertical_alignment="center")
+    with hdr_l:
+        st.markdown('<h1 class="ds-title">DalalScanner</h1>', unsafe_allow_html=True)
+        st.markdown(
+            f'<p class="ds-status">{market_status_short()} · data delayed ~15 min · last brief {last_run_ist}</p>',
+            unsafe_allow_html=True,
+        )
+    with hdr_r:
+        picked = st.selectbox(
+            "Search stocks or indices",
+            options=list(nse_options.keys()),
+            index=None,
+            accept_new_options=True,
+            label_visibility="collapsed",
+            key=f"search_select_{st.session_state.search_box_key}",
+            placeholder="Search NIFTY, Reliance, Tata, or RELIANCE.BO...",
+        )
+        if picked:
+            if len(st.session_state.selected_watchlist) >= MAX_TICKERS_PER_RUN:
+                st.warning(f"Max {MAX_TICKERS_PER_RUN} instruments per run.")
+            elif picked not in st.session_state.selected_watchlist:
+                st.session_state.selected_watchlist.append(picked)
+                st.session_state.active_pack_meta = ""
+            st.session_state.search_box_key += 1
+            st.rerun()
+
+    # 3 Pastel-Badged Index Cards
+    if index_cards:
+        pastel_styles = [
+            ("N50", "NSE Benchmark", "#FCE7F3"),
+            ("BSE", "30-Stock Index", "#ECFCCB"),
+            ("BNK", "Banking Sector", "#E0E7FF"),
+        ]
+        idx_cols = st.columns(len(index_cards))
+        for col, item, (b_txt, sub_txt, bg_hex) in zip(idx_cols, index_cards, pastel_styles):
+            col.markdown(
+                render_course_index_card(
+                    label=item["label"],
+                    subtitle=sub_txt,
+                    value=item["value"],
+                    pct=item["pct"],
+                    badge_text=b_txt,
+                    circle_bg=bg_hex,
+                ),
+                unsafe_allow_html=True,
+            )
+
+    st.write("")
+
+    # Active Queue Bento Card
+    with st.container(border=True):
+        q_count = len(st.session_state.selected_watchlist)
+        if q_count > 0:
+            chip_options = [f"{short_chip_label(item)} ✕" for item in st.session_state.selected_watchlist]
+            st.pills(
+                f"Active watchlist queue ({q_count} of {MAX_TICKERS_PER_RUN})",
+                options=chip_options,
+                selection_mode="single",
+                default=None,
+                key="active_queue_pills",
+                on_change=on_queue_chip_change,
+            )
+        else:
+            st.caption(f"Your queue (0 of {MAX_TICKERS_PER_RUN}) — select a quick list on the right or search above.")
+
+        if st.session_state.active_pack_meta:
+            st.caption(st.session_state.active_pack_meta)
+
+        if st.session_state.selected_watchlist:
+            a1, a2, _ = st.columns([0.9, 1.1, 3.5], vertical_alignment="center")
+            with a1:
+                if st.button("Clear all", key="clear_queue_btn", width="stretch"):
+                    st.session_state.selected_watchlist = []
+                    st.session_state.active_pack_meta = ""
+                    st.rerun()
+            with a2:
+                with st.popover("Save list", width="stretch"):
+                    new_wl_name = st.text_input("List name", placeholder="e.g. Swing Picks")
+                    if st.button("Save", type="primary", width="stretch"):
+                        clean_name = strip_emoji(new_wl_name)
+                        if clean_name:
+                            st.session_state.custom_watchlists[clean_name] = list(st.session_state.selected_watchlist)
+                            st.session_state.active_pack_meta = f"{clean_name} (Saved)"
+                            st.rerun()
+
+with main_right:
+    # Dark Hero Card + Lime CTA Button
+    st.markdown(
+        '<div class="ed-dark-hero">'
+        '  <div class="ed-dark-hero-badge">Deterministic Grounding</div>'
+        '  <div class="ed-dark-hero-title">Daily Market Briefs</div>'
+        '  <div class="ed-dark-hero-sub">Run audited AI briefs across your active queue with 100% numeric & source verification.</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    run_clicked = st.button("Generate briefs", type="primary", width="stretch")
+
+    st.write("")
+
+    # India VIX Mini Card
+    if vix_item:
+        vix_delta = render_delta_text(vix_item["pct"], "%", invert_sign=True)
+        st.markdown(
+            f'<div class="ed-mini-card">'
+            f'  <div style="display:flex; justify-content:space-between; align-items:center;">'
+            f'    <div>'
+            f'      <div style="font-size:0.75rem; color:#6E7387; font-weight:600;">INDIA VIX · Volatility</div>'
+            f'      <div style="font-size:1.35rem; font-weight:700; color:#181920;">{vix_item["value"]:.2f}</div>'
+            f'    </div>'
+            f'    <div style="text-align:right;">{vix_delta}<div style="font-size:0.72rem; color:#8A8FA3;">1D change</div></div>'
+            f'  </div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    # Quick Lists Card
+    with st.container(border=True):
+        st.markdown("**Quick Watchlists**")
+        all_pack_labels = [strip_emoji(k) for k in BUILT_IN_PACKS.keys()] + [
+            strip_emoji(name) for name in st.session_state.custom_watchlists.keys()
+        ]
         st.pills(
-            f"Active Queue ({len(st.session_state.selected_watchlist)}/{MAX_TICKERS_PER_RUN} — click chip to remove):",
-            options=chip_options,
+            "Load preset",
+            options=all_pack_labels,
             selection_mode="single",
             default=None,
-            key="active_queue_pills",
-            on_change=on_queue_chip_change,
+            label_visibility="collapsed",
+            key="pack_selector_pills",
+            on_change=on_pack_pill_change,
         )
-
-    with save_col:
-        with st.popover("💾 Save Watchlist", width="stretch"):
-            new_wl_name = st.text_input("Watchlist Name", placeholder="e.g. Swing Picks")
-            if st.button("Save to Session Tabs", type="primary", width="stretch"):
-                clean_name = new_wl_name.strip()
-                if not clean_name:
-                    st.warning("Enter a name first.")
-                else:
-                    st.session_state.custom_watchlists[clean_name] = list(st.session_state.selected_watchlist)
-                    st.session_state.active_pack_meta = f"**⭐ {clean_name}** (Saved!)"
-                    st.rerun()
-else:
-    st.caption("Queue is empty — pick a pack above, search any ticker, or click **🔄 Generate Briefs** for the default watchlist.")
 
 # --- Execute Pipeline with Rate-Limit Cooldown & Ticker Cap ---
 if run_clicked:
@@ -470,7 +543,7 @@ if run_clicked:
     elapsed = now_ts - st.session_state.last_run_ts
     if elapsed < COOLDOWN_SECONDS:
         wait_left = int(COOLDOWN_SECONDS - elapsed)
-        st.warning(f"Cooldown active — please wait {wait_left}s before running another live LLM generation.")
+        st.warning(f"Cooldown active — wait {wait_left}s before running another brief generation.")
     else:
         chosen_tickers = resolve_queue_tickers(nse_options)
         custom_watchlist = None
@@ -489,47 +562,70 @@ if run_clicked:
                 sector_tag = "Index" if sym.startswith("^") else "Custom"
                 custom_watchlist.append({"ticker": sym, "name": comp_name, "sector": sector_tag})
 
-        with st.spinner("Fetching market data, Pulse & Google News RSS headlines, and running deterministic verification..."):
+        with st.spinner("Fetching market data, headlines, and running verification checks..."):
             report = run_daily_pipeline(watchlist=custom_watchlist)
         st.session_state.last_run_ts = datetime.now(timezone.utc).timestamp()
-        st.success("Pipeline complete & verified!")
+        st.success("Briefs generated and verified.")
         st.rerun()
 
-st.divider()
-
-# --- Compact 5-Tab Workbench Navigation ---
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "Briefs",
-    "Radar",
-    "Backtest",
-    "Risk Plan",
-    "Filings",
-])
+st.write("")
 
 active_tickers = resolve_queue_tickers(nse_options)
-equity_choices = [t for t in active_tickers if not t.startswith("^")] or ["HDFCBANK.NS", "ICICIBANK.NS", "RELIANCE.NS", "BHARTIARTL.NS", "LT.NS"]
+equity_choices = [t for t in active_tickers if not t.startswith("^")] or [
+    "HDFCBANK.NS",
+    "ICICIBANK.NS",
+    "RELIANCE.NS",
+    "BHARTIARTL.NS",
+    "LT.NS",
+]
 
 # ==============================================================================
-# TAB 1: VERIFIED MARKET BRIEFS
+# VIEW 1: VERIFIED MARKET BRIEFS
 # ==============================================================================
-with tab1:
+if active_view == "Briefs":
     if report is None:
-        st.info("No saved brief found yet. Click **🔄 Generate Briefs** above to generate your first report.")
+        st.info("No saved brief found yet. Click Generate briefs on the right to create your first report.")
     else:
         verification = report["verification"]
         briefs = report["briefs"]
         raw_news = report["raw_news"]
         raw_prices = report["raw_prices"]
 
-        total_count = verification["total_tickers"]
-        passed_count = verification["passed_count"]
+        total_count = int(verification.get("total_tickers", len(briefs)))
+        passed_count = int(verification.get("passed_count", 0))
         computed_pass_rate = round((passed_count / total_count) * 100, 1) if total_count > 0 else 0.0
 
+        bullish_cnt = sum(1 for b in briefs.values() if b.get("sentiment") == "Bullish")
+        bearish_cnt = sum(1 for b in briefs.values() if b.get("sentiment") == "Bearish")
+        neutral_cnt = sum(1 for b in briefs.values() if b.get("sentiment") not in ("Bullish", "Bearish"))
+
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Watchlist Coverage", f"{total_count} Instruments")
-        col2.metric("Verification Pass Rate", f"{computed_pass_rate}%", f"{passed_count}/{total_count} Verified")
-        col3.metric("Brief Timestamp", last_run_ist)
-        col4.metric("Grounding Engine", "Strict v1.0")
+        col1.markdown(
+            render_stat_card("Watchlist coverage", f"{total_count} instruments", "Active queue", "Scope"),
+            unsafe_allow_html=True,
+        )
+        col2.markdown(
+            render_stat_card(
+                "Checks passed",
+                f"{computed_pass_rate:.1f}%",
+                f'<span class="ds-badge ds-badge-verified">{passed_count} of {total_count} verified</span>',
+                "Audit",
+            ),
+            unsafe_allow_html=True,
+        )
+        col3.markdown(
+            render_stat_card(
+                "Sentiment split",
+                f"{bullish_cnt} Bullish · {bearish_cnt} Bearish",
+                f"{neutral_cnt} Neutral",
+                "Briefs",
+            ),
+            unsafe_allow_html=True,
+        )
+        col4.markdown(
+            render_stat_card("Grounding engine", "Numeric + Citation", "Deterministic verifier", "Strict"),
+            unsafe_allow_html=True,
+        )
 
         st.write("")
 
@@ -538,115 +634,136 @@ with tab1:
             price_info = raw_prices[ticker]
             articles_by_id = {a["citation_id"]: a for a in raw_news[ticker].get("articles", [])}
 
-            badge = "✅ VERIFIED" if verdict["passed"] else "⚠️ FLAGGED"
-            sentiment = brief["sentiment"]
-            sentiment_icon = "🟢" if sentiment == "Bullish" else ("🔴" if sentiment == "Bearish" else "🟡")
+            sentiment = strip_emoji(brief.get("sentiment", "Neutral"))
+            if sentiment == "Bullish":
+                border_cls = "ds-card-bullish"
+                sent_html = '<span class="ds-gain">▲ Bullish</span>'
+            elif sentiment == "Bearish":
+                border_cls = "ds-card-bearish"
+                sent_html = '<span class="ds-loss">▼ Bearish</span>'
+            else:
+                border_cls = "ds-card-neutral"
+                sent_html = '<span style="color:#475569; font-weight:600;">Neutral</span>'
+
+            badge_html = render_verification_badge(bool(verdict.get("passed")))
             is_index = ticker.startswith("^")
             display_val = f"{brief['close_price']:,.2f}" if is_index else f"₹{brief['close_price']:,.2f}"
+            delta_html = render_delta_text(float(brief.get("day_change_pct", 0.0)), "%")
 
-            with st.container(border=True):
-                top_left, top_right = st.columns([3, 1])
-                with top_left:
-                    st.subheader(f"{brief['company_name']} (`{ticker}`)")
-                    st.markdown(
-                        f"**Status:** {badge} &nbsp;|&nbsp; **Sentiment:** {sentiment_icon} {sentiment} "
-                        f"&nbsp;|&nbsp; **Data as of:** `{price_info['trade_date']}` ({market_status_label()})"
-                    )
-                with top_right:
-                    st.metric(
-                        label=f"{'Level' if is_index else 'Close'} ({price_info['trade_date']})",
-                        value=display_val,
-                        delta=f"{brief['day_change_pct']:+.2f}% (1D)",
-                    )
+            st.markdown(
+                f"""
+                <div class="ds-flat-card {border_cls}">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+                        <div>
+                            <div style="font-size:1.15rem; font-weight:700; color:#181920;">
+                                {strip_emoji(brief['company_name'])} <span style="font-size:0.85rem; color:#6E7387; font-weight:500;">({ticker})</span>
+                            </div>
+                            <div style="margin-top:0.35rem; font-size:0.84rem; color:#6E7387;">
+                                {badge_html} &nbsp;·&nbsp; Sentiment: {sent_html} &nbsp;·&nbsp; Trade date: {price_info['trade_date']}
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:0.76rem; color:#6E7387;">{'Level' if is_index else 'Close'}</div>
+                            <div style="font-size:1.65rem; font-weight:700; color:#181920; font-variant-numeric:tabular-nums;">{display_val}</div>
+                            <div style="font-size:0.84rem;">{delta_html} <span style="color:#6E7387;">(1D)</span></div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-                st.write(brief["headline_summary"])
+            st.write(strip_emoji(brief["headline_summary"]))
 
-                st.markdown("**Key Drivers:**")
-                for driver in brief["key_drivers"]:
-                    st.markdown(f"- {driver}")
+            st.markdown("**Key drivers**")
+            for driver in brief["key_drivers"]:
+                st.markdown(f"- {strip_emoji(driver)}")
 
-                cited_ids = verdict.get("verified_citations", [])
-                if cited_ids:
-                    st.markdown("**Verified Sources:**")
-                    for cid in cited_ids:
-                        art = articles_by_id.get(cid)
-                        if art:
-                            st.markdown(f"- `[{cid}]` [{art['title']}]({art['url']}) — *{art['source']}*")
+            cited_ids = verdict.get("verified_citations", [])
+            if cited_ids:
+                st.markdown("**Verified sources**")
+                for cid in cited_ids:
+                    art = articles_by_id.get(cid)
+                    if art:
+                        st.markdown(f"- `[{cid}]` [{strip_emoji(art['title'])}]({art['url']}) — *{art['source']}*")
 
-                with st.expander("🔍 Inspect Ground-Truth Audit Data (Numeric & Citation Proof)"):
-                    if verdict["passed"]:
-                        st.success("All structured metrics, narrative numbers, and citation IDs matched ground-truth tool outputs.")
+            with st.expander("Ground-truth audit proof (numeric & citation check)"):
+                if verdict["passed"]:
+                    st.success("All structured metrics, narrative numbers, and citation IDs matched ground-truth tool outputs.")
+                else:
+                    st.error(f"Flagged issues: {verdict.get('errors', [])}")
+
+                a1, a2 = st.columns(2)
+                with a1:
+                    st.markdown("**1. Numeric grounding check (`yfinance` vs. brief)**")
+                    gt_close = price_info.get("close_price") or price_info.get("close") or price_info.get("last_close") or 0
+                    audit_rows = [
+                        {
+                            "Metric": "Close / Level",
+                            "Ground Truth": gt_close,
+                            "Brief Output": brief.get("close_price"),
+                            "Status": "Pass" if abs(float(gt_close) - float(brief.get("close_price", 0))) <= 0.05 else "Mismatch",
+                        },
+                        {
+                            "Metric": "1D Change (%)",
+                            "Ground Truth": price_info.get("day_change_pct"),
+                            "Brief Output": brief.get("day_change_pct"),
+                            "Status": "Pass" if abs(float(price_info.get("day_change_pct", 0)) - float(brief.get("day_change_pct", 0))) <= 0.05 else "Mismatch",
+                        },
+                        {
+                            "Metric": "5D Change (%)",
+                            "Ground Truth": price_info.get("five_day_change_pct"),
+                            "Brief Output": brief.get("five_day_change_pct"),
+                            "Status": "Pass" if abs(float(price_info.get("five_day_change_pct", 0)) - float(brief.get("five_day_change_pct", 0))) <= 0.05 else "Mismatch",
+                        },
+                        {
+                            "Metric": "20D Vol Z-Score",
+                            "Ground Truth": price_info.get("volume_zscore"),
+                            "Brief Output": "Index (N/A)" if is_index else price_info.get("volume_zscore"),
+                            "Status": "Pass",
+                        },
+                    ]
+                    st.dataframe(pd.DataFrame(audit_rows), hide_index=True, width="stretch")
+
+                with a2:
+                    st.markdown("**2. Citation & headline entailment proof**")
+                    if cited_ids:
+                        for cid in cited_ids:
+                            art = articles_by_id.get(cid)
+                            if art:
+                                st.markdown(f"- `[{cid}]` — [{strip_emoji(art['title'])}]({art['url']}) (*{art['source']}*)")
                     else:
-                        st.error(f"Flagged issues: {verdict.get('errors', [])}")
+                        st.caption("No external news citations referenced for this instrument.")
 
-                    a1, a2 = st.columns(2)
-                    with a1:
-                        st.markdown("**1. Numeric Grounding Check (`yfinance` vs. Brief)**")
-                        gt_close = price_info.get("close_price") or price_info.get("close") or price_info.get("last_close") or 0
-                        audit_rows = [
-                            {
-                                "Metric": "Close / Level",
-                                "Ground Truth": gt_close,
-                                "Brief Output": brief.get("close_price"),
-                                "Match": "✅" if abs(float(gt_close) - float(brief.get("close_price", 0))) <= 0.05 else "❌",
-                            },
-                            {
-                                "Metric": "1D Change (%)",
-                                "Ground Truth": price_info.get("day_change_pct"),
-                                "Brief Output": brief.get("day_change_pct"),
-                                "Match": "✅" if abs(float(price_info.get("day_change_pct", 0)) - float(brief.get("day_change_pct", 0))) <= 0.05 else "❌",
-                            },
-                            {
-                                "Metric": "5D Change (%)",
-                                "Ground Truth": price_info.get("five_day_change_pct"),
-                                "Brief Output": brief.get("five_day_change_pct"),
-                                "Match": "✅" if abs(float(price_info.get("five_day_change_pct", 0)) - float(brief.get("five_day_change_pct", 0))) <= 0.05 else "❌",
-                            },
-                            {
-                                "Metric": "20D Vol Z-Score",
-                                "Ground Truth": price_info.get("volume_zscore"),
-                                "Brief Output": "Index (N/A)" if is_index else price_info.get("volume_zscore"),
-                                "Match": "✅",
-                            },
-                        ]
-                        st.dataframe(pd.DataFrame(audit_rows), hide_index=True, width="stretch")
+                with st.popover("Raw tool JSON"):
+                    st.json({"raw_prices": price_info, "verifier_verdict": verdict})
 
-                    with a2:
-                        st.markdown("**2. Citation & Headline Entailment Proof**")
-                        if cited_ids:
-                            for cid in cited_ids:
-                                art = articles_by_id.get(cid)
-                                if art:
-                                    st.markdown(f"✅ **`[{cid}]`** — [{art['title']}]({art['url']}) (*{art['source']}*)")
-                        else:
-                            st.caption("No external news citations referenced for this instrument.")
-
-                    with st.popover("View Raw Tool JSON"):
-                        st.json({"raw_prices": price_info, "verifier_verdict": verdict})
+            st.write("")
 
 # ==============================================================================
-# TAB 2: SCREENER & RADAR (DAILY 41-EMA + VOLUME + 52W + 15M ORB)
+# VIEW 2: SCREENER & RADAR (DAILY 41-EMA + VOLUME + 52W + 15M ORB)
 # ==============================================================================
-with tab2:
-    st.subheader("⚡ Daily 41-EMA, Volume, 52W & 15m ORB Radar")
-    st.caption("Flags describe price action and are not recommendations.")
+elif active_view == "Radar":
+    with st.container(border=True):
+        rh1, rh2 = st.columns([3.8, 1.2], vertical_alignment="center")
+        with rh1:
+            st.subheader("Daily 41-EMA, Volume, 52W & 15m ORB Radar")
+            st.caption("Flags describe price action and are not recommendations.")
+        with rh2:
+            scan_clicked = st.button("Scan active queue", type="primary", width="stretch")
 
-    if st.button("🔍 Scan Active Watchlist Queue", type="primary"):
+    if scan_clicked:
         if not active_tickers:
             st.warning("Add at least one equity ticker to your active queue above.")
         else:
             with st.spinner("Scanning OHLCV & computing daily 41-EMA + 15m ORB signals..."):
                 radar_df = run_unified_radar(active_tickers)
 
-            nifty_regime = radar_df.attrs.get("nifty_regime", "Unknown")
-            failed_syms = radar_df.attrs.get("failed", [])
-            as_of_date = radar_df.attrs.get("as_of")
-
             st.session_state["tab2_radar_df"] = radar_df
             st.session_state["tab2_radar_attrs"] = {
-                "nifty_regime": nifty_regime,
-                "failed": failed_syms,
-                "as_of": as_of_date,
+                "nifty_regime": radar_df.attrs.get("nifty_regime", "Unknown"),
+                "failed": radar_df.attrs.get("failed", []),
+                "as_of": radar_df.attrs.get("as_of"),
             }
             st.session_state.pop("tab2_scan_explanation", None)
 
@@ -654,26 +771,36 @@ with tab2:
     cached_radar_attrs = st.session_state.get("tab2_radar_attrs", {})
 
     if cached_radar_df is not None:
-        nifty_regime = cached_radar_attrs.get("nifty_regime", "Unknown")
+        nifty_regime = strip_emoji(str(cached_radar_attrs.get("nifty_regime", "Unknown")))
         failed_syms = cached_radar_attrs.get("failed", [])
         as_of_date = cached_radar_attrs.get("as_of")
 
         if cached_radar_df.empty:
             st.info("No equity data returned (indices are excluded from equity radar).")
         else:
-            st.caption(
-                f"**Nifty Regime:** `{nifty_regime}`  •  "
-                f"**As of:** `{as_of_date or 'N/A'}`  •  "
-                f"**Cached:** ~5 min"
-            )
-            if failed_syms:
-                st.warning(f"Skipped / failed tickers: {', '.join(failed_syms)}")
-
             sorted_radar = cached_radar_df.sort_values(
                 by=["Score", "Extended", "Rel Vol"],
                 ascending=[False, True, False],
                 na_position="last",
             ).reset_index(drop=True)
+
+            if "Extended" in sorted_radar.columns:
+                sorted_radar["Extended"] = sorted_radar["Extended"].apply(
+                    lambda v: "Extended" if str(v).strip().lower() in ("true", "yes", "extended", "1") else "Normal"
+                )
+            if "ORB Status" in sorted_radar.columns:
+                sorted_radar["ORB Status"] = sorted_radar["ORB Status"].apply(lambda v: strip_emoji(str(v)))
+
+            ext_count = int((sorted_radar["Extended"] == "Extended").sum()) if "Extended" in sorted_radar.columns else 0
+            r1, r2, r3 = st.columns(3)
+            r1.markdown(render_stat_card("Nifty regime", nifty_regime, "Index trend filter", "Regime"), unsafe_allow_html=True)
+            r2.markdown(render_stat_card("Equities scanned", f"{len(sorted_radar)} stocks", f"As of {as_of_date or 'N/A'}", "Scope"), unsafe_allow_html=True)
+            r3.markdown(render_stat_card("Extended above 41-EMA", f"{ext_count} stocks", "Stretch check", "Extension"), unsafe_allow_html=True)
+
+            if failed_syms:
+                st.warning(f"Skipped / failed tickers: {', '.join(failed_syms)}")
+
+            st.write("")
 
             primary_cols = [
                 "Ticker",
@@ -696,11 +823,19 @@ with tab2:
                 }
             )
 
+            max_score = int(max(5, renamed_radar["Score"].max())) if "Score" in renamed_radar.columns else 5
             st.dataframe(
                 renamed_radar[primary_cols],
                 hide_index=True,
                 width="stretch",
                 column_config={
+                    "Score": st.column_config.ProgressColumn(
+                        "Score",
+                        min_value=0,
+                        max_value=max_score,
+                        format="%d / " + str(max_score),
+                    ),
+                    "Extended": st.column_config.TextColumn("Extended"),
                     "Close (₹)": st.column_config.NumberColumn("Close (₹)", format="%.2f"),
                     "1D (%)": st.column_config.NumberColumn("1D (%)", format="%+.2f"),
                     "vs 41-EMA (%)": st.column_config.NumberColumn("vs 41-EMA (%)", format="%+.2f"),
@@ -709,7 +844,7 @@ with tab2:
                 },
             )
 
-            with st.expander("📐 Extra Levels: daily 41-EMA & 15m ORB High/Low"):
+            with st.expander("Extra levels: daily 41-EMA & 15m ORB High/Low"):
                 extra_cols = ["Ticker", "41-EMA (₹)", "ORB High (₹)", "ORB Low (₹)"]
                 renamed_extra = sorted_radar.rename(
                     columns={
@@ -730,7 +865,7 @@ with tab2:
                 )
 
             st.write("")
-            if st.button("🧠 Explain this scan", key="explain_radar_scan_btn"):
+            if st.button("Explain this scan", key="explain_radar_scan_btn"):
                 scan_rows_json = sorted_radar.to_dict(orient="records")
                 with st.spinner("Generating grounded scan explanation & verifying numbers..."):
                     st.session_state["tab2_scan_explanation"] = explain_radar_scan(
@@ -742,12 +877,12 @@ with tab2:
             exp_res = st.session_state.get("tab2_scan_explanation")
             if exp_res:
                 ver = exp_res.get("verification", {})
-                badge = "✅ VERIFIED" if ver.get("passed") else "⚠️ FLAGGED"
+                badge_html = render_verification_badge(bool(ver.get("passed")))
                 with st.container(border=True):
-                    st.markdown(f"**Scan Explanation** &nbsp;|&nbsp; **Status:** `{badge}`")
-                    st.markdown(exp_res.get("raw_text", ""))
+                    st.markdown(f"**Scan explanation** &nbsp; {badge_html}", unsafe_allow_html=True)
+                    st.markdown(strip_emoji(exp_res.get("raw_text", "")))
 
-                    with st.expander("🔍 Inspect data"):
+                    with st.expander("Inspect scan verification & raw rows"):
                         if ver.get("passed"):
                             st.success(
                                 f"All {ver.get('checked_count', 0)} numeric tokens matched the deterministic scan rows."
@@ -764,49 +899,53 @@ with tab2:
                         )
 
 # ==============================================================================
-# TAB 3: STRATEGY BACKTESTING LAB (5 Strategies + AI Analyst)
+# VIEW 3: STRATEGY BACKTESTING LAB
 # ==============================================================================
-with tab3:
-    st.subheader("📈 Multi-Strategy Backtesting Lab & AI Performance Analyst")
+elif active_view == "Backtest":
+    with st.container(border=True):
+        st.subheader("Strategy Backtesting Lab")
+        st.caption("Historical rule simulation on OHLCV bars. Past setups are a small sample and not predictive.")
 
-    s_col1, s_col2 = st.columns([2.2, 1.3])
-    with s_col1:
-        selected_strategy = st.selectbox(
-            "Select Trading Strategy",
-            options=list(STRATEGY_SPECS.keys()),
-            index=0,
-        )
-    with s_col2:
-        bt_ticker = st.selectbox("Select Instrument", options=equity_choices, key="bt_ticker_select")
+        s_col1, s_col2 = st.columns([2.2, 1.3])
+        with s_col1:
+            selected_strategy = st.selectbox(
+                "Select trading strategy",
+                options=list(STRATEGY_SPECS.keys()),
+                index=0,
+            )
+        with s_col2:
+            bt_ticker = st.selectbox("Select instrument", options=equity_choices, key="bt_ticker_select")
 
-    st.info(STRATEGY_SPECS[selected_strategy]["description"])
+        st.caption(strip_emoji(STRATEGY_SPECS[selected_strategy]["description"]))
 
-    is_swing_mode = STRATEGY_SPECS[selected_strategy]["mode"] == "swing"
-    max_lookback = 365 if is_swing_mode else 55
-    default_lookback = 180 if is_swing_mode else 30
+        is_swing_mode = STRATEGY_SPECS[selected_strategy]["mode"] == "swing"
+        max_lookback = 365 if is_swing_mode else 55
+        default_lookback = 180 if is_swing_mode else 30
 
-    p1, p2, p3, p4 = st.columns(4)
-    with p1:
-        bt_days = st.slider(
-            "Lookback (Calendar Days)",
-            min_value=10,
-            max_value=max_lookback,
-            value=default_lookback,
-            step=5,
-        )
-    with p2:
-        bt_rr = st.selectbox("Risk-to-Reward Ratio", options=[1.5, 2.0, 2.5, 3.0], index=1, key="bt_rr_select")
-    with p3:
-        bt_cap = st.number_input("Capital / Trade (₹)", min_value=10000.0, value=100000.0, step=10000.0)
-    with p4:
-        trade_cap_choice = st.selectbox(
-            "Max Trades / Day",
-            options=["1 (First Setup Only)", "2", "3", "Unlimited"],
-            index=0,
-        )
-        max_trades_day = 99 if trade_cap_choice == "Unlimited" else int(trade_cap_choice.split(" ")[0])
+        p1, p2, p3, p4 = st.columns(4)
+        with p1:
+            bt_days = st.slider(
+                "Lookback (calendar days)",
+                min_value=10,
+                max_value=max_lookback,
+                value=default_lookback,
+                step=5,
+            )
+        with p2:
+            bt_rr = st.selectbox("Risk-to-reward ratio", options=[1.5, 2.0, 2.5, 3.0], index=1, key="bt_rr_select")
+        with p3:
+            bt_cap = st.number_input("Capital / trade (₹)", min_value=10000.0, value=100000.0, step=10000.0)
+        with p4:
+            trade_cap_choice = st.selectbox(
+                "Max trades / day",
+                options=["1 (First setup only)", "2", "3", "Unlimited"],
+                index=0,
+            )
+            max_trades_day = 99 if trade_cap_choice == "Unlimited" else int(trade_cap_choice.split(" ")[0])
 
-    if st.button("🚀 Run Strategy Backtest & AI Review", type="primary"):
+        run_bt_clicked = st.button("Run strategy backtest", type="primary")
+
+    if run_bt_clicked:
         with st.spinner(f"Simulating {selected_strategy} on {bt_ticker}..."):
             bt_res = run_strategy_backtest(
                 ticker=bt_ticker,
@@ -820,42 +959,82 @@ with tab3:
         if "error" in bt_res:
             st.warning(bt_res["error"])
         else:
+            total_triggers = int(bt_res["total_trades"])
             st.caption(
-                f"Backtest bar resolution: **{bt_res['timeframe']}** bars ({bt_res['total_trades']} triggers over {bt_days} calendar days)."
+                f"Resolution: {bt_res['timeframe']} bars · {total_triggers} triggers over {bt_days} calendar days · small sample, not predictive."
             )
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Total Triggers", bt_res["total_trades"], f"{bt_res['timeframe']} bars")
-            m2.metric("Win Rate", f"{bt_res['win_rate_pct']}%", f"{bt_res['wins']}W / {bt_res['losses']}L")
-            m3.metric("Net PnL (₹)", f"₹{bt_res['net_pnl_inr']:,.2f}", f"{bt_res['net_roi_pct']:+.2f}% on Capital")
-            m4.metric("Avg Win / Avg Loss", f"₹{bt_res['avg_win_inr']:,.0f}", f"Loss: ₹{bt_res['avg_loss_inr']:,.0f}")
+            m1.markdown(
+                render_stat_card("Total triggers", f"{total_triggers} trades", f"{bt_res['timeframe']} bars", "Sample"),
+                unsafe_allow_html=True,
+            )
+            m2.markdown(
+                render_stat_card(
+                    "Win rate (sample)",
+                    f"{bt_res['win_rate_pct']}% ({total_triggers} trades)",
+                    f"{bt_res['wins']}W / {bt_res['losses']}L",
+                    "Hit rate",
+                ),
+                unsafe_allow_html=True,
+            )
+            pnl_val = float(bt_res["net_pnl_inr"])
+            pnl_html = render_delta_text(float(bt_res["net_roi_pct"]), "%")
+            m3.markdown(
+                render_stat_card("Net PnL (₹)", f"₹{pnl_val:+,.2f}", f"{pnl_html} on capital", "Return"),
+                unsafe_allow_html=True,
+            )
+            m4.markdown(
+                render_stat_card(
+                    "Avg win / avg loss",
+                    f"₹{bt_res['avg_win_inr']:,.0f}",
+                    f"Loss: -₹{abs(float(bt_res['avg_loss_inr'])):,.0f}",
+                    "Payoff",
+                ),
+                unsafe_allow_html=True,
+            )
 
-            with st.container(border=True):
-                st.markdown("#### 🧠 AI Quant Backtest Insights (`openai/gpt-oss-20b`)")
-                with st.spinner("Synthesizing strategy edge and exit efficiency..."):
-                    ai_notes = generate_ai_backtest_insights(bt_res)
-                st.markdown(ai_notes)
+            st.write("")
+            b_left, b_right = st.columns([1.4, 1.1], vertical_alignment="top")
+            with b_left:
+                with st.container(border=True):
+                    st.markdown("**Cumulative PnL curve (₹)**")
+                    st.line_chart(bt_res["trades_df"].set_index("Entry Date")["Cumulative PnL (₹)"])
+            with b_right:
+                with st.container(border=True):
+                    with st.spinner("Synthesizing & verifying backtest notes..."):
+                        ai_notes = strip_emoji(generate_ai_backtest_insights(bt_res))
+                    bt_ver = verify_backtest_notes(ai_notes, bt_res)
+                    badge_html = render_verification_badge(bt_ver["passed"])
+                    st.markdown(f"**AI review notes** &nbsp; {badge_html}", unsafe_allow_html=True)
+                    st.caption("Small sample, not predictive — evaluated against deterministic backtest figures.")
+                    st.markdown(ai_notes)
 
-            st.line_chart(bt_res["trades_df"].set_index("Entry Date")["Cumulative PnL (₹)"])
-            st.dataframe(bt_res["trades_df"], hide_index=True, width="stretch")
+                    with st.expander("Backtest note verification proof"):
+                        if bt_ver["passed"]:
+                            st.success(f"All {bt_ver['checked_count']} numeric values in the review notes matched backtest metrics.")
+                        else:
+                            st.warning(f"Unmatched numbers flagged in notes: {bt_ver['mismatches']}")
+
+            with st.expander("Full trade log"):
+                st.dataframe(bt_res["trades_df"], hide_index=True, width="stretch")
 
 # ==============================================================================
-# TAB 4: RISK PLAN (Zero-Lag Fragment + Callback-Driven Two-Way Sync)
+# VIEW 4: RISK PLAN (Long/Short Direction + Watchlist Stock Picker)
 # ==============================================================================
 @st.fragment
-def render_risk_plan_tab():
+def render_risk_plan_view():
     st.subheader("Risk Plan")
-    st.caption("Find out how many shares you can buy without losing more than you can afford.")
+    st.caption("Set your max loss and stop-loss separately to compute the exact number of shares for Long or Short setups.")
 
     prefs = st.session_state.risk_prefs
 
-    # Dismissible onboarding banner
     if prefs.get("show_hint", True):
         with st.container(border=True):
             hc1, hc2 = st.columns([6, 1], vertical_alignment="center")
             with hc1:
                 st.markdown(
-                    "ℹ️ **New here? Three quick steps:** set your limits, pick a stock, read your plan. "
-                    "This is a calculator that shows its maths, not advice."
+                    "**Three quick steps:** set your limits, pick direction and stop-loss, and read your share count. "
+                    "This is a position-sizing calculator, not investment advice."
                 )
             with hc2:
                 if st.button("Got it", key="dismiss_rp_hint", width="stretch"):
@@ -864,11 +1043,17 @@ def render_risk_plan_tab():
 
     if "rp_mode" not in st.session_state:
         st.session_state["rp_mode"] = "One stock"
-    is_one_stock = st.session_state["rp_mode"] == "One stock"
+    if "rp_direction" not in st.session_state:
+        st.session_state["rp_direction"] = "Long (Buy)"
 
-    # --------------------------------------------------------------------------
+    is_one_stock = st.session_state["rp_mode"] == "One stock"
+    is_short = st.session_state["rp_direction"] == "Short (Sell)"
+
+    # 3-Checkpoint HTML Step Line
+    step2_txt = "Direction, stock & stop-loss" if is_one_stock else "Direction, stocks & stop-loss"
+    st.markdown(render_risk_stepper("Your limits", step2_txt, "Your plan"), unsafe_allow_html=True)
+
     # STEP 1: YOUR LIMITS
-    # --------------------------------------------------------------------------
     with st.container(border=True):
         st.markdown('<span class="step-badge">1</span><span class="step-title">Your limits</span>', unsafe_allow_html=True)
         st.write("")
@@ -884,13 +1069,13 @@ def render_risk_plan_tab():
                 key="rp_account_cap",
             )
             prefs["capital"] = account_cap
-            st.caption("The money you have available to trade.")
+            st.caption("Total money available to trade.")
 
         with lim2:
             u_col, v_col = st.columns([1.0, 1.6], vertical_alignment="bottom")
             with u_col:
                 loss_unit = st.segmented_control(
-                    "Most I'm OK with losing" if is_one_stock else "Most I'm OK with losing, in total",
+                    "Max loss" if is_one_stock else "Total max loss",
                     options=["₹", "%"],
                     default=prefs.get("loss_unit", "₹"),
                     key="rp_loss_unit_ctrl",
@@ -930,11 +1115,12 @@ def render_risk_plan_tab():
                     prefs["loss_inr"] = max_loss_inr
 
             if is_one_stock:
-                st.caption(f"That is {loss_pct_of_cap:.1f}% of your capital. Many traders keep this near 1%.")
+                st.caption(f"{loss_pct_of_cap:.1f}% of capital. Many traders keep single-trade risk near 1%.")
             else:
-                n_eq = max(len(equity_choices), 1)
+                selected_basket = st.session_state.get("rp_watchlist_selected", equity_choices)
+                n_eq = max(len(selected_basket), 1)
                 per_stock_share = max_loss_inr / n_eq
-                st.caption(f"Shared equally: ₹{per_stock_share:,.0f} for each of your {n_eq} stocks.")
+                st.caption(f"Shared equally: ₹{per_stock_share:,.0f} per stock across {n_eq} selected stocks.")
 
         with lim3:
             trade_style = st.segmented_control(
@@ -946,37 +1132,66 @@ def render_risk_plan_tab():
             if not trade_style:
                 trade_style = prefs.get("trade_style", "Delivery")
             prefs["trade_style"] = trade_style
-            if trade_style == "Delivery":
-                st.caption("Delivery: you pay the full price and can hold for days.")
+            if is_short and trade_style == "Delivery":
+                st.caption("Note: NSE cash equity shorting requires Intraday (MIS) or F&O.")
+            elif trade_style == "Delivery":
+                st.caption("Delivery: 1x cash, hold across days.")
             else:
                 st.caption("Intraday: up to 5x margin for same-day square-off.")
 
-    # Mode Pill Selector ("One stock" | "Whole watchlist")
-    picked_mode = st.segmented_control(
-        "Plan scope",
-        options=["One stock", "Whole watchlist"],
-        default=st.session_state["rp_mode"],
-        label_visibility="collapsed",
-        key="rp_scope_pills",
-    )
-    if picked_mode and picked_mode != st.session_state["rp_mode"]:
-        st.session_state["rp_mode"] = picked_mode
-        st.rerun(scope="fragment")
+    # Scope + Direction Bar
+    ctrl_c1, ctrl_c2 = st.columns([1.4, 1.6], vertical_alignment="center")
+    with ctrl_c1:
+        picked_mode = st.segmented_control(
+            "Plan scope",
+            options=["One stock", "Whole watchlist"],
+            default=st.session_state["rp_mode"],
+            label_visibility="collapsed",
+            key="rp_scope_pills",
+        )
+        if picked_mode and picked_mode != st.session_state["rp_mode"]:
+            st.session_state["rp_mode"] = picked_mode
+            st.rerun(scope="fragment")
 
+    with ctrl_c2:
+        picked_dir = st.segmented_control(
+            "Trade direction",
+            options=["Long (Buy)", "Short (Sell)"],
+            default=st.session_state["rp_direction"],
+            label_visibility="collapsed",
+            key="rp_direction_pills",
+        )
+        if picked_dir and picked_dir != st.session_state["rp_direction"]:
+            st.session_state["rp_direction"] = picked_dir
+            if "rp_buy_px" in st.session_state:
+                cur_entry = float(st.session_state["rp_buy_px"])
+                cur_sl = float(st.session_state.get("rp_sl_px", cur_entry * 0.98))
+                dist = abs(cur_entry - cur_sl)
+                if dist <= 0:
+                    dist = round(cur_entry * 0.02, 2)
+                new_sl = round(cur_entry + dist, 2) if picked_dir == "Short (Sell)" else round(max(cur_entry - dist, 0.05), 2)
+                st.session_state["rp_sl_px"] = new_sl
+                st.session_state["rp_sl_px_input"] = new_sl
+            st.rerun(scope="fragment")
+
+    is_short = st.session_state["rp_direction"] == "Short (Sell)"
     is_intraday = trade_style == "Intraday"
     leverage = 5.0 if is_intraday else 1.0
     trade_mode_label = "MIS Intraday (5x Margin)" if is_intraday else "CNC Positional Delivery (1x Cash)"
     rr_ratio = float(prefs.get("rr_ratio", 2.0))
 
     # ==========================================================================
-    # MODE A: ONE STOCK (Max Affordable Shares -> Stop-Loss Synced to Loss Limit)
+    # MODE A: ONE STOCK (LONG OR SHORT)
     # ==========================================================================
     if st.session_state["rp_mode"] == "One stock":
         with st.container(border=True):
-            st.markdown('<span class="step-badge">2</span><span class="step-title">Pick a stock</span>', unsafe_allow_html=True)
+            st.markdown(
+                f'<span class="step-badge">2</span><span class="step-title">Pick a stock & stop-loss ({st.session_state["rp_direction"]})</span>',
+                unsafe_allow_html=True,
+            )
             st.write("")
 
-            p_col1, p_col2, p_col3 = st.columns([1.2, 1.3, 1.3], vertical_alignment="top")
+            p_col1, p_col2, p_col3 = st.columns([1.15, 1.35, 1.3], vertical_alignment="top")
             with p_col1:
                 display_map = {sym.replace(".NS", "").replace(".BO", ""): sym for sym in equity_choices}
                 chosen_short = st.selectbox(
@@ -985,21 +1200,22 @@ def render_risk_plan_tab():
                     key="rp_single_stock_select",
                 )
                 risk_ticker = display_map[chosen_short]
-                st.caption("From your watchlist at the top of the app.")
+                st.caption("From your active queue above.")
 
-            # Auto-fill entry price when stock changes
             if st.session_state.get("rp_loaded_ticker") != risk_ticker:
                 live_px = max(1.0, float(get_last_close_price(risk_ticker)))
+                default_sl = round(live_px * 1.02, 2) if is_short else round(max(live_px * 0.98, 0.05), 2)
                 st.session_state["rp_loaded_ticker"] = risk_ticker
                 st.session_state["rp_buy_px"] = live_px
-                st.session_state["rp_sync_sig"] = None
+                st.session_state["rp_sl_px"] = default_sl
+                st.session_state["rp_sl_px_input"] = default_sl
 
             with p_col2:
-                b_in, b_ref = st.columns([4.2, 1.0], vertical_alignment="bottom")
+                b_in, b_ref = st.columns([3.4, 1.25], vertical_alignment="bottom")
                 with b_in:
                     safe_buy_px = max(1.0, float(st.session_state["rp_buy_px"]))
                     buy_px = st.number_input(
-                        "Price you'd buy at (₹)",
+                        "Short entry (₹)" if is_short else "Buy price (₹)",
                         min_value=1.0,
                         value=safe_buy_px,
                         step=0.5,
@@ -1007,235 +1223,297 @@ def render_risk_plan_tab():
                     )
                     st.session_state["rp_buy_px"] = buy_px
                 with b_ref:
-                    if st.button("↻", key="rp_refresh_buy_px", help="Refresh latest price", width="stretch"):
+                    if st.button("Quote", key="rp_refresh_buy_px", help="Refresh latest close price", width="stretch"):
                         fresh_px = max(1.0, float(get_last_close_price(risk_ticker)))
+                        fresh_sl = round(fresh_px * 1.02, 2) if is_short else round(max(fresh_px * 0.98, 0.05), 2)
                         st.session_state["rp_buy_px"] = fresh_px
-                        st.session_state["rp_sync_sig"] = None
+                        st.session_state["rp_sl_px"] = fresh_sl
+                        st.session_state["rp_sl_px_input"] = fresh_sl
                         st.rerun(scope="fragment")
-                st.caption("Filled in automatically. Prices are delayed about 15 minutes.")
-
-            # Max shares your capital & trade style can buy
-            buying_power = account_cap * leverage
-            max_shares = int(buying_power // buy_px)
-
-            # Forward sync: runs ONLY when Capital / Style / Stock / Buy Price / Max Loss changes
-            sync_sig = f"{risk_ticker}_{trade_style}_{round(account_cap, 2)}_{round(buy_px, 2)}_{max_shares}_{round(max_loss_inr, 2)}"
-            if st.session_state.get("rp_sync_sig") != sync_sig:
-                if max_shares > 0:
-                    per_share_risk = max_loss_inr / max_shares
-                    synced_sl = round(max(buy_px - per_share_risk, 0.05), 2)
-                else:
-                    synced_sl = round(max(buy_px * 0.98, 0.05), 2)
-                st.session_state["rp_sl_px"] = synced_sl
-                st.session_state["rp_sl_px_input"] = synced_sl
-                st.session_state["rp_sync_sig"] = sync_sig
-
-            # Callback for manual Stop-Loss edits (NO st.rerun loop!)
-            def _on_manual_sl_edit():
-                edited_sl = float(st.session_state.get("rp_sl_px_input", 0.05))
-                st.session_state["rp_sl_px"] = edited_sl
-                if max_shares > 0:
-                    updated_loss = max(1.0, round(max_shares * max(buy_px - edited_sl, 0.0), 2))
-                    prefs["loss_inr"] = updated_loss
-                    prefs["loss_pct"] = round((updated_loss / account_cap) * 100.0, 2) if account_cap > 0 else prefs["loss_pct"]
-                    st.session_state["rp_loss_inr_input"] = updated_loss
-                    st.session_state["rp_loss_pct_input"] = prefs["loss_pct"]
-                    st.session_state["rp_sync_sig"] = (
-                        f"{risk_ticker}_{trade_style}_{round(account_cap, 2)}_{round(buy_px, 2)}_{max_shares}_{updated_loss}"
-                    )
+                st.caption("Last close / delayed quote (~15 min).")
 
             with p_col3:
+                fallback_sl = round(buy_px * 1.02, 2) if is_short else round(max(buy_px * 0.98, 0.05), 2)
+                safe_sl_px = max(0.05, float(st.session_state.get("rp_sl_px", fallback_sl)))
                 sl_px = st.number_input(
                     "Stop-loss price (₹)",
                     min_value=0.05,
+                    value=safe_sl_px,
                     step=0.25,
                     key="rp_sl_px_input",
-                    on_change=_on_manual_sl_edit,
                 )
-                diff_px = buy_px - sl_px
-                diff_pct = (diff_px / buy_px) * 100.0 if buy_px > 0 else 0.0
-                if diff_px > 0:
-                    st.caption(
-                        f"Synced to your ₹{max_loss_inr:,.0f} limit across {max_shares} shares: "
-                        f"₹{diff_px:,.2f} ({diff_pct:.2f}%) below buy price."
-                    )
+                st.session_state["rp_sl_px"] = sl_px
+
+                if is_short:
+                    diff_px = sl_px - buy_px
+                    diff_pct = (diff_px / buy_px) * 100.0 if buy_px > 0 else 0.0
+                    if diff_px > 0:
+                        st.caption(f"Risk per share: ₹{diff_px:,.2f} ({diff_pct:.2f}% above entry).")
+                    else:
+                        st.caption("For Short trades, set stop-loss above entry price.")
                 else:
-                    st.caption("Set stop-loss below your buy price to limit downside.")
+                    diff_px = buy_px - sl_px
+                    diff_pct = (diff_px / buy_px) * 100.0 if buy_px > 0 else 0.0
+                    if diff_px > 0:
+                        st.caption(f"Risk per share: ₹{diff_px:,.2f} ({diff_pct:.2f}% below buy price).")
+                    else:
+                        st.caption("For Long trades, set stop-loss below buy price.")
 
-            st.info("Not sure where to put it? The **Radar** tab shows each stock's opening-range low, a common place to start.")
+            st.caption(
+                "Tip: Check the Radar view for each stock's 15m opening-range high (Short stop) or low (Long stop)."
+            )
 
-        # ----------------------------------------------------------------------
-        # STEP 3: YOUR PLAN (ONE STOCK)
-        # ----------------------------------------------------------------------
+        # STEP 3: YOUR PLAN (DERIVED SHARES)
         with st.container(border=True):
             st.markdown('<span class="step-badge">3</span><span class="step-title">Your plan</span>', unsafe_allow_html=True)
             st.write("")
 
+            buying_power = account_cap * leverage
+            max_affordable_shares = int(buying_power // buy_px)
+
+            invalid_sl = (sl_px <= buy_px) if is_short else (sl_px >= buy_px)
             if max_loss_inr > account_cap:
-                st.error(f"Your loss limit (₹{max_loss_inr:,.0f}) is higher than your account capital (₹{account_cap:,.0f}). Lower your loss limit first.")
-            elif max_shares <= 0:
-                st.warning(
-                    f"0 shares fit: 1 share of {chosen_short} costs ₹{buy_px:,.2f}, which exceeds your ₹{buying_power:,.0f} buying power."
-                )
-            elif (max_loss_inr / max_shares) >= buy_px:
-                st.error(
-                    f"Your ₹{max_loss_inr:,.0f} loss limit is higher than the entire position value (₹{max_shares * buy_px:,.0f}) of {max_shares} shares. "
-                    f"Lower your loss limit or increase account capital."
-                )
-            elif sl_px >= buy_px:
-                st.error(f"Your stop-loss (₹{sl_px:,.2f}) must be below your buy price (₹{buy_px:,.2f}).")
+                st.error(f"Max loss (₹{max_loss_inr:,.0f}) exceeds account capital (₹{account_cap:,.0f}). Lower your max loss first.")
+            elif invalid_sl:
+                if is_short:
+                    st.error(f"For Short (Sell), stop-loss (₹{sl_px:,.2f}) must be above entry price (₹{buy_px:,.2f}).")
+                else:
+                    st.error(f"For Long (Buy), stop-loss (₹{sl_px:,.2f}) must be below buy price (₹{buy_px:,.2f}).")
             else:
-                shares = max_shares
-                risk_per_share = round(buy_px - sl_px, 2)
-                pos_value = round(shares * buy_px, 2)
-                cash_paid = round(pos_value / leverage, 2)
-                cap_pct_used = round((cash_paid / account_cap) * 100.0, 1)
-                stop_loss_hit_inr = round(shares * risk_per_share, 2)
-                target_px = round(buy_px + (risk_per_share * rr_ratio), 2)
-                target_hit_inr = round(shares * risk_per_share * rr_ratio, 2)
-                reward_per_share = round(risk_per_share * rr_ratio, 2)
+                risk_per_share = round(abs(buy_px - sl_px), 2)
+                risk_based_shares = int(max_loss_inr // risk_per_share) if risk_per_share > 0 else 0
+                shares = min(risk_based_shares, max_affordable_shares)
+                capped_by_capital = risk_based_shares > max_affordable_shares
 
-                st.success(
-                    f"✅ **Max-size plan ready. Buy {shares} shares of {chosen_short} (₹{cash_paid:,.0f} margin/cash used).**\n\n"
-                    f"Your stop-loss is synced to **₹{sl_px:,.2f}** (`-{diff_pct:.2f}%`) so if it hits, you lose **₹{stop_loss_hit_inr:,.0f}** — matching your **₹{max_loss_inr:,.0f}** limit."
-                )
-
-                mc1, mc2, mc3, mc4 = st.columns(4)
-                with mc1:
-                    st.markdown(
-                        f'<div class="rp-card">'
-                        f'<div class="rp-card-label">You buy (max possible)</div>'
-                        f'<div class="rp-card-val">{shares} shares</div>'
-                        f'<div class="rp-card-sub">of {chosen_short} at ₹{buy_px:,.2f}</div>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-                with mc2:
-                    st.markdown(
-                        f'<div class="rp-card">'
-                        f'<div class="rp-card-label">You pay</div>'
-                        f'<div class="rp-card-val">₹{cash_paid:,.0f}</div>'
-                        f'<div class="rp-card-sub">{cap_pct_used:.1f}% of your capital</div>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-                with mc3:
-                    st.markdown(
-                        f'<div class="rp-card">'
-                        f'<div class="rp-card-label">If your stop-loss hits</div>'
-                        f'<div class="rp-card-val" style="color:#f87171;">-₹{stop_loss_hit_inr:,.2f}</div>'
-                        f'<div class="rp-card-sub">Synced SL at ₹{sl_px:,.2f}</div>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-                with mc4:
-                    st.markdown(
-                        f'<div class="rp-card">'
-                        f'<div class="rp-card-label">If your target hits</div>'
-                        f'<div class="rp-card-val" style="color:#34d399;">+₹{target_hit_inr:,.2f}</div>'
-                        f'<div class="rp-card-sub">Sell at ₹{target_px:,.2f} ({rr_ratio:g}× your risk)</div>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-
-                st.write("")
-
-                total_span = max(target_px - sl_px, 0.01)
-                risk_width_pct = min(max((risk_per_share / total_span) * 100.0, 8.0), 92.0)
-
-                st.markdown(
-                    f"""
-                    <div style="margin: 8px 0 14px 0;">
-                        <div style="font-size:12px; opacity:0.75; margin-bottom:6px;">Price ladder (drawn to scale)</div>
-                        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:6px;">
-                            <span style="color:#f87171;">Risk ₹{risk_per_share:,.2f} a share</span>
-                            <span style="color:#34d399;">Reward ₹{reward_per_share:,.2f} a share</span>
-                        </div>
-                        <div style="position:relative; height:10px; border-radius:999px; overflow:hidden; display:flex; background:rgba(255,255,255,0.1);">
-                            <div style="width:{risk_width_pct:.2f}%; background:#ef4444; height:100%;"></div>
-                            <div style="flex:1; background:#10b981; height:100%;"></div>
-                        </div>
-                        <div style="position:relative; height:44px; margin-top:6px;">
-                            <div style="position:absolute; left:0%; text-align:left;">
-                                <div style="font-size:11px; opacity:0.7;">| Stop-loss</div>
-                                <div style="font-size:12px; font-weight:700;">₹{sl_px:,.2f}</div>
-                            </div>
-                            <div style="position:absolute; left:{risk_width_pct:.2f}%; transform:translateX(-50%); text-align:center;">
-                                <div style="font-size:11px; opacity:0.7;">| Buy</div>
-                                <div style="font-size:12px; font-weight:700;">₹{buy_px:,.2f}</div>
-                            </div>
-                            <div style="position:absolute; right:0%; text-align:right;">
-                                <div style="font-size:11px; opacity:0.7;">Target |</div>
-                                <div style="font-size:12px; font-weight:700;">₹{target_px:,.2f}</div>
-                            </div>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-                st.markdown(
-                    f"**Why {shares} shares & ₹{sl_px:,.2f} SL?** Your ₹{account_cap:,.0f} capital ({int(leverage)}× = ₹{buying_power:,.0f} buying power) ÷ ₹{buy_px:,.2f} = **{shares} max shares**. "
-                    f"Splitting your **₹{max_loss_inr:,.0f}** loss limit across {shares} shares gives **₹{risk_per_share:,.2f}/share** risk, placing your synced stop-loss at **₹{sl_px:,.2f}**."
-                )
-                st.caption(
-                    "⚠️ Research tool, not investment advice. Figures are before brokerage and taxes, and a price can jump past your stop-loss."
-                )
-
-                with st.expander("Advanced options — Reward ratio, full formula, AI risk check"):
-                    adv1, adv2 = st.columns([1.4, 2.6], vertical_alignment="center")
-                    with adv1:
-                        new_rr = st.slider(
-                            "Reward-to-Risk Ratio (R:R)",
-                            min_value=1.0,
-                            max_value=5.0,
-                            value=rr_ratio,
-                            step=0.5,
-                            key="rp_adv_rr_slider",
+                if shares <= 0:
+                    if max_affordable_shares <= 0:
+                        st.warning(
+                            f"0 shares fit: 1 share of {chosen_short} requires ₹{buy_px:,.2f}, exceeding ₹{buying_power:,.0f} buying power."
                         )
-                        if new_rr != rr_ratio:
-                            prefs["rr_ratio"] = new_rr
-                            st.rerun(scope="fragment")
+                    else:
+                        st.warning(
+                            f"0 shares fit: 1 share risks ₹{risk_per_share:,.2f} if stopped out, exceeding your ₹{max_loss_inr:,.0f} max loss."
+                        )
+                else:
+                    pos_value = round(shares * buy_px, 2)
+                    cash_paid = round(pos_value / leverage, 2)
+                    cap_pct_used = round((cash_paid / account_cap) * 100.0, 1)
+                    stop_loss_hit_inr = round(shares * risk_per_share, 2)
+                    reward_per_share = round(risk_per_share * rr_ratio, 2)
+                    target_px = round(max(buy_px - reward_per_share, 0.05), 2) if is_short else round(buy_px + reward_per_share, 2)
+                    target_hit_inr = round(shares * reward_per_share, 2)
 
-                    plan_full = calculate_position_plan(
-                        capital=account_cap,
-                        risk_budget_inr=stop_loss_hit_inr,
-                        entry_price=buy_px,
-                        stop_loss_price=sl_px,
-                        aggression=5,
-                        rr_ratio=rr_ratio,
-                        max_allocation_pct=100.0,
-                        trade_mode=trade_mode_label,
+                    action_verb = "Short sell" if is_short else "Buy"
+                    cap_note = (
+                        f" (capped by your ₹{buying_power:,.0f} buying power; risk budget alone allowed {risk_based_shares} shares)"
+                        if capped_by_capital
+                        else ""
                     )
-                    with adv2:
-                        if "error" not in plan_full:
-                            st.markdown(
-                                f"- **After-Tax Risk:** `₹{plan_full['actual_risk_inr']:,.2f}` (includes `₹{plan_full['est_charges_inr']:,.2f}` Indian statutory STT/GST/stamp fees)\n"
-                                f"- **Breakeven Price:** `₹{plan_full['breakeven_price']:,.2f}` • **TP1 (50% exit):** `₹{plan_full['tp1_price']:,.2f}` • **TP2:** `₹{plan_full['target_price']:,.2f}`"
-                            )
+                    st.info(
+                        f"**{action_verb} {shares} shares of {chosen_short}** (₹{cash_paid:,.0f} margin/cash used){cap_note}. "
+                        f"If stop-loss at **₹{sl_px:,.2f}** hits, estimated loss is **-₹{stop_loss_hit_inr:,.0f}** (within your ₹{max_loss_inr:,.0f} limit)."
+                    )
 
-                    if st.button("🧠 Run AI Risk Check", key="rp_ai_risk_btn"):
-                        brief_sent = "Not yet generated"
-                        if report and risk_ticker in report.get("briefs", {}):
-                            brief_sent = report["briefs"][risk_ticker].get("sentiment", "Neutral")
-                        with st.spinner("Auditing stop distance, concentration, and brief sentiment..."):
-                            audit_text = generate_ai_risk_audit(
-                                ticker=risk_ticker,
-                                plan=plan_full,
-                                brief_sentiment=brief_sent,
-                                india_vix=vix_live,
+                    mc1, mc2, mc3, mc4 = st.columns(4)
+                    with mc1:
+                        st.markdown(
+                            f'<div class="rp-card">'
+                            f'<div class="rp-card-label">Shares to {"short" if is_short else "buy"}</div>'
+                            f'<div class="rp-card-val">{shares} shares</div>'
+                            f'<div class="rp-card-sub">{chosen_short} at ₹{buy_px:,.2f}</div>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
+                    with mc2:
+                        st.markdown(
+                            f'<div class="rp-card">'
+                            f'<div class="rp-card-label">Capital / margin used</div>'
+                            f'<div class="rp-card-val">₹{cash_paid:,.0f}</div>'
+                            f'<div class="rp-card-sub">{cap_pct_used:.1f}% of capital</div>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
+                    with mc3:
+                        st.markdown(
+                            f'<div class="rp-card">'
+                            f'<div class="rp-card-label">Stop-loss hit (Loss)</div>'
+                            f'<div class="rp-card-val ds-loss">▼ -₹{stop_loss_hit_inr:,.2f}</div>'
+                            f'<div class="rp-card-sub">Stop at ₹{sl_px:,.2f} ({"+" if is_short else "-"}{diff_pct:.2f}%)</div>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
+                    with mc4:
+                        st.markdown(
+                            f'<div class="rp-card-cream">'
+                            f'<div class="rp-card-label">Target hit (Gain)</div>'
+                            f'<div class="rp-card-val ds-gain-dark">▲ +₹{target_hit_inr:,.2f}</div>'
+                            f'<div class="rp-card-sub">Target ₹{target_px:,.2f} ({rr_ratio:g}x risk)</div>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
+
+                    st.write("")
+
+                    if is_short:
+                        total_span = max(sl_px - target_px, 0.01)
+                        gain_width_pct = min(max((reward_per_share / total_span) * 100.0, 8.0), 92.0)
+                        st.markdown(
+                            f"""
+                            <div style="margin: 8px 0 14px 0;">
+                                <div style="font-size:12px; color:#6E7387; margin-bottom:6px;">Short price ladder (drawn to scale)</div>
+                                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px;">
+                                    <span class="ds-gain">▲ Gain per share: ₹{reward_per_share:,.2f}</span>
+                                    <span class="ds-loss">▼ Loss per share: ₹{risk_per_share:,.2f}</span>
+                                </div>
+                                <div style="position:relative; height:8px; border-radius:999px; overflow:hidden; display:flex; background:#E2E5F0;">
+                                    <div style="width:{gain_width_pct:.2f}%; background:#16A34A; height:100%;"></div>
+                                    <div style="flex:1; background:#DC2626; height:100%;"></div>
+                                </div>
+                                <div style="position:relative; height:44px; margin-top:6px;">
+                                    <div style="position:absolute; left:0%; text-align:left;">
+                                        <div style="font-size:11px; color:#6E7387;">Target (Cover)</div>
+                                        <div style="font-size:12px; font-weight:700; color:#181920;">₹{target_px:,.2f}</div>
+                                    </div>
+                                    <div style="position:absolute; left:{gain_width_pct:.2f}%; transform:translateX(-50%); text-align:center;">
+                                        <div style="font-size:11px; color:#6E7387;">Short Entry</div>
+                                        <div style="font-size:12px; font-weight:700; color:#181920;">₹{buy_px:,.2f}</div>
+                                    </div>
+                                    <div style="position:absolute; right:0%; text-align:right;">
+                                        <div style="font-size:11px; color:#6E7387;">Stop-loss</div>
+                                        <div style="font-size:12px; font-weight:700; color:#181920;">₹{sl_px:,.2f}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        total_span = max(target_px - sl_px, 0.01)
+                        risk_width_pct = min(max((risk_per_share / total_span) * 100.0, 8.0), 92.0)
+                        st.markdown(
+                            f"""
+                            <div style="margin: 8px 0 14px 0;">
+                                <div style="font-size:12px; color:#6E7387; margin-bottom:6px;">Long price ladder (drawn to scale)</div>
+                                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px;">
+                                    <span class="ds-loss">▼ Loss per share: ₹{risk_per_share:,.2f}</span>
+                                    <span class="ds-gain">▲ Gain per share: ₹{reward_per_share:,.2f}</span>
+                                </div>
+                                <div style="position:relative; height:8px; border-radius:999px; overflow:hidden; display:flex; background:#E2E5F0;">
+                                    <div style="width:{risk_width_pct:.2f}%; background:#DC2626; height:100%;"></div>
+                                    <div style="flex:1; background:#16A34A; height:100%;"></div>
+                                </div>
+                                <div style="position:relative; height:44px; margin-top:6px;">
+                                    <div style="position:absolute; left:0%; text-align:left;">
+                                        <div style="font-size:11px; color:#6E7387;">Stop-loss</div>
+                                        <div style="font-size:12px; font-weight:700; color:#181920;">₹{sl_px:,.2f}</div>
+                                    </div>
+                                    <div style="position:absolute; left:{risk_width_pct:.2f}%; transform:translateX(-50%); text-align:center;">
+                                        <div style="font-size:11px; color:#6E7387;">Buy</div>
+                                        <div style="font-size:12px; font-weight:700; color:#181920;">₹{buy_px:,.2f}</div>
+                                    </div>
+                                    <div style="position:absolute; right:0%; text-align:right;">
+                                        <div style="font-size:11px; color:#6E7387;">Target</div>
+                                        <div style="font-size:12px; font-weight:700; color:#181920;">₹{target_px:,.2f}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
+                    st.markdown(
+                        f"**Formula:** `min(floor(₹{max_loss_inr:,.0f} max loss ÷ ₹{risk_per_share:,.2f} risk/share), "
+                        f"floor(₹{buying_power:,.0f} buying power ÷ ₹{buy_px:,.2f}))` = **{shares} shares**."
+                    )
+                    st.caption(
+                        "Calculator output only, not investment advice. Excludes slippage/gaps past stop-loss."
+                    )
+
+                    with st.expander("Advanced options — Reward ratio, charges & AI risk check"):
+                        adv1, adv2 = st.columns([1.4, 2.6], vertical_alignment="center")
+                        with adv1:
+                            new_rr = st.slider(
+                                "Reward-to-risk ratio (R:R)",
+                                min_value=1.0,
+                                max_value=5.0,
+                                value=rr_ratio,
+                                step=0.5,
+                                key="rp_adv_rr_slider",
                             )
-                        st.markdown(audit_text)
+                            if new_rr != rr_ratio:
+                                prefs["rr_ratio"] = new_rr
+                                st.rerun(scope="fragment")
+
+                        plan_full = calculate_position_plan(
+                            capital=account_cap,
+                            risk_budget_inr=max_loss_inr,
+                            entry_price=buy_px,
+                            stop_loss_price=sl_px,
+                            aggression=5,
+                            rr_ratio=rr_ratio,
+                            max_allocation_pct=100.0,
+                            trade_mode=trade_mode_label,
+                        )
+                        with adv2:
+                            if "error" not in plan_full:
+                                st.markdown(
+                                    f"- **After-tax risk:** `₹{plan_full['actual_risk_inr']:,.2f}` (includes `₹{plan_full['est_charges_inr']:,.2f}` statutory STT/GST/stamp fees)\n"
+                                    f"- **Breakeven:** `₹{plan_full['breakeven_price']:,.2f}` · **TP1 (50% exit):** `₹{plan_full['tp1_price']:,.2f}` · **TP2:** `₹{plan_full['target_price']:,.2f}`"
+                                )
+
+                        if st.button("Run AI risk check", key="rp_ai_risk_btn"):
+                            brief_sent = "Not yet generated"
+                            if report and risk_ticker in report.get("briefs", {}):
+                                brief_sent = report["briefs"][risk_ticker].get("sentiment", "Neutral")
+                            with st.spinner("Auditing stop distance, concentration, and brief sentiment..."):
+                                audit_text = strip_emoji(
+                                    generate_ai_risk_audit(
+                                        ticker=risk_ticker,
+                                        plan=plan_full,
+                                        brief_sentiment=brief_sent,
+                                        india_vix=vix_live,
+                                    )
+                                )
+                            st.markdown(audit_text)
 
     # ==========================================================================
-    # MODE B: WHOLE WATCHLIST
+    # MODE B: WHOLE WATCHLIST (WITH STOCK INCLUSION PICKER + LONG / SHORT)
     # ==========================================================================
     else:
         with st.container(border=True):
-            st.markdown('<span class="step-badge">2</span><span class="step-title">Set one stop-loss for all</span>', unsafe_allow_html=True)
+            st.markdown(
+                f'<span class="step-badge">2</span><span class="step-title">Select stocks & stop-loss distance ({st.session_state["rp_direction"]})</span>',
+                unsafe_allow_html=True,
+            )
             st.write("")
 
-            sl_col, _ = st.columns([1.2, 2.5])
+            queue_sig = tuple(equity_choices)
+            if st.session_state.get("rp_watchlist_queue_sig") != queue_sig:
+                st.session_state["rp_watchlist_queue_sig"] = queue_sig
+                st.session_state["rp_watchlist_selected"] = list(equity_choices)
+
+            pk_col, sl_col = st.columns([2.4, 1.3], vertical_alignment="top")
+            with pk_col:
+                short_to_full = {sym.replace(".NS", "").replace(".BO", ""): sym for sym in equity_choices}
+                full_to_short = {v: k for k, v in short_to_full.items()}
+                current_shorts = [
+                    full_to_short[s]
+                    for s in st.session_state.get("rp_watchlist_selected", equity_choices)
+                    if s in full_to_short
+                ]
+                picked_shorts = st.multiselect(
+                    "Stocks included in basket (remove or re-add anytime)",
+                    options=list(short_to_full.keys()),
+                    default=current_shorts,
+                    key="rp_watchlist_multiselect",
+                    placeholder="Select stocks from your active queue...",
+                )
+                selected_basket_tickers = [short_to_full[s] for s in picked_shorts]
+                st.session_state["rp_watchlist_selected"] = selected_basket_tickers
+                st.caption(
+                    f"{len(selected_basket_tickers)} of {len(equity_choices)} queue stocks selected · equal risk split across selected stocks."
+                )
+
             with sl_col:
                 default_sl_pct = 2.0 if is_intraday else 4.0
                 safe_port_sl = min(25.0, max(0.25, float(st.session_state.get("rp_port_sl_pct", default_sl_pct))))
@@ -1249,23 +1527,24 @@ def render_risk_plan_tab():
                 )
                 st.session_state["rp_port_sl_pct"] = port_sl_pct
                 st.caption(
-                    "Each stock's stop-loss sits this far below its price. "
-                    "Add or remove stocks using the chips at the top of the app."
+                    f"Placed {port_sl_pct:.2f}% {'above' if is_short else 'below'} each stock's entry price."
                 )
 
         with st.container(border=True):
             st.markdown('<span class="step-badge">3</span><span class="step-title">Your plan</span>', unsafe_allow_html=True)
             st.write("")
 
-            if max_loss_inr > account_cap:
-                st.error(f"Your total loss limit (₹{max_loss_inr:,.0f}) is higher than your account capital (₹{account_cap:,.0f}). Lower your loss limit first.")
+            if not selected_basket_tickers:
+                st.warning("Select at least one stock in Step 2 above to size your watchlist basket.")
+            elif max_loss_inr > account_cap:
+                st.error(f"Total max loss (₹{max_loss_inr:,.0f}) exceeds account capital (₹{account_cap:,.0f}). Lower your max loss first.")
             else:
                 brief_prices_map = report.get("raw_prices") if report else None
                 briefs_map = report.get("briefs") if report else None
 
                 with st.spinner("Sizing watchlist basket..."):
                     port_res = allocate_equal_risk_portfolio(
-                        tickers=equity_choices,
+                        tickers=selected_basket_tickers,
                         total_capital=account_cap,
                         total_risk_budget_inr=max_loss_inr,
                         stop_loss_pct=port_sl_pct,
@@ -1284,49 +1563,53 @@ def render_risk_plan_tab():
 
                     clean_rows = []
                     left_out_msgs = []
+                    action_col_name = "Short" if is_short else "Buy"
                     for _, r in df_raw.iterrows():
                         sym = r["Symbol"]
                         px = float(r["Price (₹)"])
                         sh = int(r["Shares"])
                         pay = float(r["Margin / Cash Used (₹)"])
                         sl_loss = float(r["Stop-Loss Risk (₹)"])
+                        sl_px_row = round(px * (1.0 + port_sl_pct / 100.0), 2) if is_short else round(px * (1.0 - port_sl_pct / 100.0), 2)
                         one_sh_risk = round(px * (port_sl_pct / 100.0), 2)
 
                         if sh > 0:
                             status_txt = "Fits"
                         elif one_sh_risk > per_trade_risk:
-                            status_txt = f"1 share risks ₹{one_sh_risk:,.0f}, over ₹{per_trade_risk:,.0f}"
+                            status_txt = f"1 share risks ₹{one_sh_risk:,.0f} (over ₹{per_trade_risk:,.0f})"
                             left_out_msgs.append(
-                                f"**{sym}** is left out. One share of {sym} would risk ₹{one_sh_risk:,.0f} if its stop hit, "
-                                f"more than its ₹{per_trade_risk:,.0f} share of your loss limit. A tighter stop-loss or a higher loss limit would let it in."
+                                f"**{sym}** excluded: 1 share risks ₹{one_sh_risk:,.0f}, exceeding its ₹{per_trade_risk:,.0f} equal risk share."
                             )
                         else:
                             status_txt = f"Price ₹{px:,.0f} > ₹{port_res['buying_power_per_stock']:,.0f} slice"
                             left_out_msgs.append(
-                                f"**{sym}** is left out because its share price (₹{px:,.0f}) exceeds its ₹{port_res['buying_power_per_stock']:,.0f} capital slice."
+                                f"**{sym}** excluded: share price (₹{px:,.0f}) exceeds its ₹{port_res['buying_power_per_stock']:,.0f} capital slice."
                             )
 
                         clean_rows.append(
                             {
                                 "Stock": sym,
-                                "Price": f"₹{px:,.2f}",
-                                "Buy": f"{sh} {'share' if sh == 1 else 'shares'}" if sh > 0 else "0",
-                                "You pay": f"₹{pay:,.2f}" if pay % 1 else f"₹{pay:,.0f}",
+                                "Direction": "Short" if is_short else "Long",
+                                "Entry": f"₹{px:,.2f}",
+                                "Stop-loss": f"₹{sl_px_row:,.2f}",
+                                action_col_name: f"{sh} {'share' if sh == 1 else 'shares'}" if sh > 0 else "0",
+                                "Margin / Cash": f"₹{pay:,.2f}" if pay % 1 else f"₹{pay:,.0f}",
                                 "Loss if stopped": f"-₹{sl_loss:,.2f}" if sl_loss > 0 else "₹0",
                                 "Status": status_txt,
                             }
                         )
 
+                    dir_label = "Short (Sell)" if is_short else "Long (Buy)"
                     if sized_cnt < tot_cnt:
-                        st.warning(f"⚠️ **{sized_cnt} of {tot_cnt} stocks fit.** " + (" ".join(left_out_msgs)))
+                        st.warning(f"**{sized_cnt} of {tot_cnt} stocks fit ({dir_label}).** " + (" ".join(left_out_msgs)))
                     else:
-                        st.success(f"✅ **All {tot_cnt} of {tot_cnt} stocks fit within your ₹{max_loss_inr:,.0f} loss limit.**")
+                        st.info(f"**All {tot_cnt} of {tot_cnt} selected stocks fit ({dir_label}) within your ₹{max_loss_inr:,.0f} max loss.**")
 
                     w1, w2, w3 = st.columns(3)
                     with w1:
                         st.markdown(
                             f'<div class="rp-card">'
-                            f'<div class="rp-card-label">Stocks you can buy</div>'
+                            f'<div class="rp-card-label">Stocks included ({dir_label})</div>'
                             f'<div class="rp-card-val">{sized_cnt} of {tot_cnt}</div>'
                             f'<div class="rp-card-sub">{"Intraday (5x margin)" if is_intraday else "Delivery (1x cash)"}</div>'
                             f'</div>',
@@ -1335,18 +1618,18 @@ def render_risk_plan_tab():
                     with w2:
                         st.markdown(
                             f'<div class="rp-card">'
-                            f'<div class="rp-card-label">You pay in total</div>'
+                            f'<div class="rp-card-label">Total capital / margin used</div>'
                             f'<div class="rp-card-val">₹{port_res["total_margin_used"]:,.0f}</div>'
-                            f'<div class="rp-card-sub">{port_res["cap_used_pct"]:.1f}% of your capital</div>'
+                            f'<div class="rp-card-sub">{port_res["cap_used_pct"]:.1f}% of capital</div>'
                             f'</div>',
                             unsafe_allow_html=True,
                         )
                     with w3:
                         st.markdown(
                             f'<div class="rp-card">'
-                            f'<div class="rp-card-label">If every stop-loss hits</div>'
-                            f'<div class="rp-card-val" style="color:#f87171;">-₹{port_res["total_sl_risk"]:,.2f}</div>'
-                            f'<div class="rp-card-sub">Under your ₹{max_loss_inr:,.0f} limit</div>'
+                            f'<div class="rp-card-label">Combined stop-loss hit (Loss)</div>'
+                            f'<div class="rp-card-val ds-loss">▼ -₹{port_res["total_sl_risk"]:,.2f}</div>'
+                            f'<div class="rp-card-sub">Within ₹{max_loss_inr:,.0f} max loss</div>'
                             f'</div>',
                             unsafe_allow_html=True,
                         )
@@ -1358,8 +1641,8 @@ def render_risk_plan_tab():
                     corr_pairs = port_res["high_corr_pairs"]
                     if corr_pairs:
                         st.warning(
-                            f"⚠️ **{', '.join(corr_pairs)} tend to move together** (60-day correlation from your price data). "
-                            f"If one stop-loss hits, the other may too, so your real loss could land closer to the full figure above."
+                            f"**High correlation notice:** {', '.join(corr_pairs)} move closely together (60D correlation). "
+                            f"Simultaneous stop-outs could realize the full combined loss above."
                         )
 
                     money_ok = port_res["total_margin_used"] <= account_cap + 0.05
@@ -1370,35 +1653,34 @@ def render_risk_plan_tab():
                     chk_c, csv_c = st.columns([3.5, 1.2], vertical_alignment="center")
                     with chk_c:
                         st.caption(
-                            f"✓ Checked: {checks_passed} of 3 maths checks passed (money used, loss limit, rows add up)"
-                        )
-                        st.caption(
-                            "⚠️ Research tool, not investment advice. Figures are before brokerage and taxes, and a price can jump past your stop-loss."
+                            f"Maths checks passed: {checks_passed} of 3 (capital limit, max loss limit, row totals)."
                         )
                     with csv_c:
                         st.download_button(
-                            label="Download as CSV",
+                            label="Download CSV",
                             data=display_clean_df.to_csv(index=False).encode("utf-8"),
                             file_name="risk_plan_watchlist.csv",
                             mime="text/csv",
                             width="stretch",
                         )
 
-                    with st.expander("📈 AI Expected Return & Horizon Projection"):
+                    with st.expander("Horizon return projection"):
+                        if is_short:
+                            st.caption("Note: Horizon drift projection models long-side historical equity drift.")
                         pr_c1, pr_c2 = st.columns([1.5, 1.5], vertical_alignment="bottom")
                         with pr_c1:
                             horizon_label = st.selectbox(
-                                "Holding Period",
+                                "Holding period",
                                 options=["1 Month (30 Days)", "3 Months (90 Days)", "6 Months (180 Days)", "1 Year (365 Days)"],
                                 index=1,
                                 key="rp_horizon_select",
                             )
                             horizon_days = int(horizon_label.split("(")[1].split(" ")[0])
                         with pr_c2:
-                            run_proj_btn = st.button("🧠 Project Expected Returns", type="primary", width="stretch")
+                            run_proj_btn = st.button("Project returns", type="primary", width="stretch")
 
                         if run_proj_btn:
-                            with st.spinner("Computing 1-year historical drift/volatility bands & AI outlook..."):
+                            with st.spinner("Computing 1-year historical drift/volatility bands..."):
                                 proj_res = project_portfolio_returns(
                                     alloc_df=df_raw,
                                     total_capital=account_cap,
@@ -1415,79 +1697,82 @@ def render_risk_plan_tab():
                             else:
                                 pm1, pm2, pm3 = st.columns(3)
                                 pm1.metric(
-                                    label=f"Bear Case ({horizon_days}D • Stop Floor)",
+                                    label=f"Bear case ({horizon_days}D stop floor)",
                                     value=f"₹{proj_res['bear_pnl']:+,.2f}",
-                                    delta=f"1Y Ann. Volatility: {proj_res['ann_vol_pct']}%",
+                                    delta=f"1Y Ann. Vol: {proj_res['ann_vol_pct']}%",
                                     delta_color="inverse",
                                 )
                                 pm2.metric(
-                                    label=f"Base Case ({horizon_days}D • Median)",
+                                    label=f"Base case ({horizon_days}D median)",
                                     value=f"₹{proj_res['base_pnl']:+,.2f}",
-                                    delta=f"{proj_res['base_roi_cap_pct']:+.2f}% on ₹{account_cap:,.0f} total capital",
+                                    delta=f"{proj_res['base_roi_cap_pct']:+.2f}% on capital",
                                     delta_color="normal",
                                 )
                                 pm3.metric(
-                                    label=f"Bull Case ({horizon_days}D • 90th Pct)",
+                                    label=f"Bull case ({horizon_days}D 90th pct)",
                                     value=f"₹{proj_res['bull_pnl']:+,.2f}",
-                                    delta=f"{proj_res['bull_roi_cap_pct']:+.2f}% on ₹{account_cap:,.0f} total capital",
+                                    delta=f"{proj_res['bull_roi_cap_pct']:+.2f}% on capital",
                                     delta_color="normal",
                                 )
-                                st.markdown(proj_res["ai_summary"])
+                                st.markdown(strip_emoji(proj_res["ai_summary"]))
                                 st.line_chart(proj_res["curve_df"].set_index("Trading Day"))
 
-with tab4:
-    render_risk_plan_tab()
-# ==============================================================================
-# TAB 5: NSE FILINGS & PDF / XBRL REPORT ANALYZER (AUTO-REFRESHING)
-# ==============================================================================
-with tab5:
-    st.subheader("🏢 Official NSE Corporate Filings & Grounded PDF Analyzer")
-    st.caption("Auto-fetches the latest NSE announcements, quarterly results (Q1–Q4), shareholding pattern, board meetings, and corporate actions whenever you select a stock.")
 
-    f_col1, f_col2 = st.columns([3, 1], vertical_alignment="bottom")
-    with f_col1:
-        equity_labels = [lbl for lbl, sym in nse_options.items() if not sym.startswith("^")]
-        picked_filing_label = st.selectbox(
-            "NSE Equity Symbol (Search by Company Name or Ticker)",
-            options=equity_labels,
-            index=0 if equity_labels else None,
-            accept_new_options=True,
-            key="tab5_filing_search",
-        )
-        if picked_filing_label in nse_options:
-            filing_sym = nse_options[picked_filing_label].replace(".NS", "").replace(".BO", "")
-        else:
-            filing_sym = (picked_filing_label or "").strip().upper().replace(".NS", "").replace(".BO", "")
-    with f_col2:
-        fetch_filings_btn = st.button("🔄 Refresh Latest Filings", type="primary", width="stretch")
+if active_view == "Risk Plan":
+    render_risk_plan_view()
+
+# ==============================================================================
+# VIEW 5: NSE FILINGS & PDF / XBRL REPORT ANALYZER
+# ==============================================================================
+elif active_view == "Filings":
+    with st.container(border=True):
+        st.subheader("NSE Corporate Filings & Grounded Document Analyzer")
+        st.caption("Fetches exchange announcements, quarterly results, corporate actions, board meetings, and shareholding history.")
+
+        f_col1, f_col2 = st.columns([3, 1], vertical_alignment="bottom")
+        with f_col1:
+            equity_labels = [lbl for lbl, sym in nse_options.items() if not sym.startswith("^")]
+            picked_filing_label = st.selectbox(
+                "NSE equity symbol (search by company name or ticker)",
+                options=equity_labels,
+                index=0 if equity_labels else None,
+                accept_new_options=True,
+                key="tab5_filing_search",
+            )
+            if picked_filing_label in nse_options:
+                filing_sym = nse_options[picked_filing_label].replace(".NS", "").replace(".BO", "")
+            else:
+                filing_sym = (picked_filing_label or "").strip().upper().replace(".NS", "").replace(".BO", "")
+        with f_col2:
+            fetch_filings_btn = st.button("Refresh filings", type="primary", width="stretch")
 
     last_fetched_sym = st.session_state.get("nse_filings_last_sym")
     if filing_sym and (fetch_filings_btn or filing_sym != last_fetched_sym):
-        with st.spinner(f"Fetching latest live NSE disclosures for {filing_sym}..."):
+        with st.spinner(f"Fetching live NSE disclosures for {filing_sym}..."):
             st.session_state["nse_filings_cache"] = get_nse_filings(ticker=filing_sym)
             st.session_state["nse_filings_last_sym"] = filing_sym
             st.session_state.pop("pdf_analysis_cache", None)
 
     filings_data = st.session_state.get("nse_filings_cache")
     if filings_data:
-        st.caption(f"Showing Disclosures for **{filings_data.get('symbol')}** • `{filings_data.get('status')}`")
+        st.caption(f"Disclosures for {filings_data.get('symbol')} · {strip_emoji(str(filings_data.get('status', '')))}")
 
         if filings_data.get("financial_results"):
-            st.markdown("**📊 Quarterly Financial Results (Q1 / Q2 / Q3 / Q4)**")
+            st.markdown("**Quarterly financial results (Q1–Q4)**")
             st.dataframe(
                 pd.DataFrame(filings_data["financial_results"]),
                 hide_index=True,
                 width="stretch",
-                column_config={"Filing Link": st.column_config.LinkColumn("Filing Link", display_text="Open Filing")},
+                column_config={"Filing Link": st.column_config.LinkColumn("Filing Link", display_text="Open filing")},
             )
 
         if filings_data.get("announcements"):
-            st.markdown("**📢 Recent Corporate Announcements**")
+            st.markdown("**Recent corporate announcements**")
             st.dataframe(
                 pd.DataFrame(filings_data["announcements"]),
                 hide_index=True,
                 width="stretch",
-                column_config={"PDF / XBRL Link": st.column_config.LinkColumn("PDF / XBRL Link", display_text="Open Filing")},
+                column_config={"PDF / XBRL Link": st.column_config.LinkColumn("PDF / XBRL Link", display_text="Open filing")},
             )
         else:
             st.info("No recent announcements returned from NSE endpoint.")
@@ -1495,57 +1780,57 @@ with tab5:
         c_act, c_bm = st.columns(2)
         with c_act:
             if filings_data.get("corporate_actions"):
-                st.markdown("**💰 Corporate Actions**")
+                st.markdown("**Corporate actions**")
                 st.dataframe(pd.DataFrame(filings_data["corporate_actions"]), hide_index=True, width="stretch")
         with c_bm:
             if filings_data.get("board_meetings"):
-                st.markdown("**🗓️ Board Meetings**")
+                st.markdown("**Board meetings**")
                 st.dataframe(pd.DataFrame(filings_data["board_meetings"]), hide_index=True, width="stretch")
 
         if filings_data.get("shareholding"):
-            st.markdown("**🏛️ Shareholding Pattern History**")
+            st.markdown("**Shareholding pattern history**")
             st.dataframe(pd.DataFrame(filings_data["shareholding"]), hide_index=True, width="stretch")
 
-    st.divider()
-    st.markdown("### 📄 Grounded PDF / XBRL Filing Analyzer (`[Page X]` Citations)")
+    with st.container(border=True):
+        st.markdown("**Grounded PDF / XBRL filing analyzer (`[Page X]` citations)**")
 
-    quick_links: dict[str, str] = {"-- Paste a custom URL below --": ""}
-    if filings_data:
-        for row in filings_data.get("announcements", []):
-            lnk = row.get("PDF / XBRL Link", "")
-            if lnk.startswith("http") and row.get("Type") in ("PDF", "XBRL"):
-                quick_links[f"[{row['Type']}] {row['Broadcast Date']} — {row['Subject'][:55]}"] = lnk
-        for row in filings_data.get("financial_results", []):
-            lnk = row.get("Filing Link", "")
-            if lnk.startswith("http") and "nsearchives.nseindia.com" in lnk:
-                quick_links[f"[Q-RESULT] Period {row['Period Ended']} ({row['Basis']})"] = lnk
+        quick_links: dict[str, str] = {"-- Paste a custom URL below --": ""}
+        if filings_data:
+            for row in filings_data.get("announcements", []):
+                lnk = row.get("PDF / XBRL Link", "")
+                if lnk.startswith("http") and row.get("Type") in ("PDF", "XBRL"):
+                    quick_links[f"[{row['Type']}] {row['Broadcast Date']} — {row['Subject'][:55]}"] = lnk
+            for row in filings_data.get("financial_results", []):
+                lnk = row.get("Filing Link", "")
+                if lnk.startswith("http") and "nsearchives.nseindia.com" in lnk:
+                    quick_links[f"[Q-RESULT] Period {row['Period Ended']} ({row['Basis']})"] = lnk
 
-    picked_quick = st.selectbox("Quick-Select Fetched Filing (or paste any URL below)", options=list(quick_links.keys()))
-    default_url = quick_links[picked_quick]
-    pdf_url = st.text_input(
-        "NSE Announcement PDF or XBRL (.xml) URL",
-        value=default_url,
-        placeholder="https://nsearchives.nseindia.com/corporate/...",
-    )
-    pdf_question = st.text_input(
-        "Analytical Question",
-        value="Extract key financial results, YoY/QoQ growth, margins, management guidance, and key risks.",
-    )
-    if st.button("🧠 Analyze Filing with Grounded Citations"):
-        if not pdf_url.strip():
-            st.warning("Paste or select a valid PDF or XBRL (.xml) URL first.")
-        else:
-            with st.spinner("Downloading filing, ranking relevant excerpts, and synthesizing cited insights..."):
-                st.session_state["pdf_analysis_cache"] = analyze_pdf_report(pdf_url=pdf_url.strip(), question=pdf_question)
+        picked_quick = st.selectbox("Quick-select fetched filing (or paste a URL below)", options=list(quick_links.keys()))
+        default_url = quick_links[picked_quick]
+        pdf_url = st.text_input(
+            "NSE announcement PDF or XBRL (.xml) URL",
+            value=default_url,
+            placeholder="https://nsearchives.nseindia.com/corporate/...",
+        )
+        pdf_question = st.text_input(
+            "Analytical question",
+            value="Extract key financial results, YoY/QoQ growth, margins, management guidance, and key risks.",
+        )
+        if st.button("Analyze filing with citations", type="primary"):
+            if not pdf_url.strip():
+                st.warning("Paste or select a valid PDF or XBRL (.xml) URL first.")
+            else:
+                with st.spinner("Downloading filing, ranking excerpts, and synthesizing cited insights..."):
+                    st.session_state["pdf_analysis_cache"] = analyze_pdf_report(pdf_url=pdf_url.strip(), question=pdf_question)
 
-    pdf_res = st.session_state.get("pdf_analysis_cache")
-    if pdf_res:
-        st.caption(f"Engine Mode: `{pdf_res.get('mode')}`")
-        st.markdown(pdf_res.get("answer", ""))
+        pdf_res = st.session_state.get("pdf_analysis_cache")
+        if pdf_res:
+            st.caption(f"Engine mode: {pdf_res.get('mode')}")
+            st.markdown(strip_emoji(pdf_res.get("answer", "")))
 
-# --- Clear Bottom Disclaimer ---
+# --- Bottom Disclaimer ---
 st.divider()
 st.caption(
-    "⚠️ **Disclaimer:** Research assistance only, not investment advice. Market pulse quotes are delayed ~15 min; "
-    "briefs are generated strictly from `yfinance` OHLCV data and Pulse / Google News RSS headlines."
+    "Disclaimer: Research assistance only, not investment advice. Quotes are delayed ~15 min; "
+    "briefs are generated from retrieved OHLCV data and exchange/news feeds."
 )

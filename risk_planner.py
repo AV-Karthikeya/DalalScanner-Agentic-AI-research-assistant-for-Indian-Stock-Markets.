@@ -41,7 +41,7 @@ def get_last_close_price(ticker: str, brief_prices: dict[str, Any] | None = None
             return round(float(hist["Close"].iloc[-1]), 2)
     except Exception:
         pass
-    return 1000.0
+    return 0.0  # unavailable: callers must treat <= 0 as "no price", never a made-up number
 
 
 def get_trade_idea_defaults(ticker: str, is_long: bool = True) -> dict[str, float | str]:
@@ -75,6 +75,8 @@ def get_trade_idea_defaults(ticker: str, is_long: bool = True) -> dict[str, floa
     except Exception:
         pass
 
+    if last_px <= 0:
+        return {"entry": 0.0, "sl": 0.0, "source": "Price unavailable"}
     fallback_sl = round(last_px * (0.985 if is_long else 1.015), 2)
     return {"entry": last_px, "sl": fallback_sl, "source": "1.5% default buffer"}
 
@@ -142,6 +144,17 @@ def calculate_position_plan(
     max_qty_by_cap = int(max_buying_power // entry_price)
     was_capped = raw_qty > max_qty_by_cap
     qty = max(0, min(raw_qty, max_qty_by_cap))
+
+    def _sl_charges(q: int) -> float:
+        return estimate_indian_roundtrip_charges(
+            turnover_buy=q * (entry_price if is_long else stop_loss_price),
+            turnover_sell=q * (stop_loss_price if is_long else entry_price),
+            is_intraday=is_intraday,
+        )
+
+    # The stop-loss risk alone fits the budget; make sure stop risk + charges does too.
+    while qty > 0 and qty * risk_per_share + _sl_charges(qty) > adjusted_risk_inr:
+        qty -= 1
 
     if qty == 0:
         return {
@@ -238,6 +251,7 @@ def allocate_equal_risk_portfolio(
     returns_map: dict[str, pd.Series] = {}
     slice_exceeded_syms: list[str] = []
     risk_blocked_syms: list[str] = []
+    unavailable_syms: list[str] = []
 
     for sym in clean_tickers:
         short_sym = sym.replace(".NS", "")
@@ -256,6 +270,7 @@ def allocate_equal_risk_portfolio(
             pass
 
         if px <= 0:
+            unavailable_syms.append(short_sym)
             continue
 
         stop_dist = round(px * (stop_loss_pct / 100.0), 2)
@@ -265,6 +280,10 @@ def allocate_equal_risk_portfolio(
         qty_by_risk = int(per_trade_risk // stop_dist)
         qty_by_bp = int(buying_power_per_stock // px)
         qty = max(0, min(qty_by_risk, qty_by_bp))
+        while qty > 0 and (
+            qty * stop_dist + estimate_indian_roundtrip_charges(qty * px, qty * sl_px, is_intraday=is_intraday)
+        ) > per_trade_risk:
+            qty -= 1
 
         pos_value = round(qty * px, 2)
         margin_used = round(pos_value / leverage, 2)
@@ -286,7 +305,8 @@ def allocate_equal_risk_portfolio(
             binding = "Slice limit"
         elif qty == 0:
             risk_blocked_syms.append(short_sym)
-            status = f"❌ 1 share risk (₹{stop_dist:,.0f}) > ₹{per_trade_risk:,.0f}"
+            one_share_risk = stop_dist + estimate_indian_roundtrip_charges(px, sl_px, is_intraday=is_intraday)
+            status = f"❌ 1 share risk (₹{one_share_risk:,.0f}) > ₹{per_trade_risk:,.0f}"
             binding = "Risk budget"
         elif qty_by_bp < qty_by_risk:
             status = "⚠️ Capital-capped"
@@ -316,7 +336,11 @@ def allocate_equal_risk_portfolio(
 
     df = pd.DataFrame(raw_rows)
     if df.empty:
-        return {"df": df, "error": "Could not retrieve prices for the selected symbols."}
+        return {
+            "df": df,
+            "error": "Could not retrieve prices for the selected symbols.",
+            "unavailable_syms": unavailable_syms,
+        }
 
     total_margin_used = round(float(df["Margin / Cash Used (₹)"].sum()), 2)
     total_pos_value = round(float(df["Position Value (₹)"].sum()), 2)
@@ -358,6 +382,7 @@ def allocate_equal_risk_portfolio(
         "sized_count": sized_count,
         "slice_exceeded_syms": slice_exceeded_syms,
         "risk_blocked_syms": risk_blocked_syms,
+        "unavailable_syms": unavailable_syms,
         "per_trade_risk": round(per_trade_risk, 2),
         "buying_power_per_stock": round(buying_power_per_stock, 2),
         "total_capital": round(total_capital, 2),
@@ -607,3 +632,34 @@ def generate_ai_risk_audit(
         f"- **Capital Concentration & Charges:** {cap_note} Estimated statutory + brokerage cost is `₹{plan['est_charges_inr']}` (breakeven at `₹{plan['breakeven_price']}`).\n"
         f"- **Execution Rule:** Verified brief sentiment is **{brief_sentiment}**. Book 50% at **TP1 (`₹{plan['tp1_price']}`)** and trail stop to breakeven (`₹{plan['breakeven_price']}`)."
     )
+
+
+def volatility_range(
+    daily_returns: "np.ndarray | pd.Series",
+    position_value: float,
+    horizon_days: int = 90,
+    z: float = 1.2816,
+) -> dict[str, Any]:
+    """
+    Historical-volatility range for a position. NOT a forecast: no drift, no stop-loss clamp, no AI text.
+    About 80% of past windows of this length stayed inside +/- range_inr if returns were normal;
+    real returns have fatter tails, so real moves can be larger.
+    """
+    r = np.asarray(daily_returns, dtype=float)
+    r = r[~np.isnan(r)]
+    if len(r) < 30 or position_value <= 0:
+        return {"error": "Need at least 30 daily returns and a positive position value."}
+    trading_days = max(1, int(round(horizon_days * 252.0 / 365.0)))
+    daily_sigma = float(np.std(r, ddof=1))
+    band_pct = z * daily_sigma * float(np.sqrt(trading_days))
+    range_inr = round(position_value * band_pct, 2)
+    return {
+        "horizon_days": horizon_days,
+        "trading_days": trading_days,
+        "ann_vol_pct": round(daily_sigma * float(np.sqrt(252)) * 100, 1),
+        "band_pct": round(band_pct * 100, 2),
+        "range_inr": range_inr,
+        "low_inr": -range_inr,
+        "high_inr": range_inr,
+        "note": "Historical volatility range, not a forecast. Real moves can be larger.",
+    }

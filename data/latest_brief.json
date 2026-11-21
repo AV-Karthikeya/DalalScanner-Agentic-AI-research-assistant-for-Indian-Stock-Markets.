@@ -1,449 +1,454 @@
 {
-  "generated_at_utc": "2026-11-20T12:37:35.536025+00:00",
+  "generated_at_utc": "2026-11-20T14:04:41.583047+00:00",
   "verification": {
     "total_tickers": 5,
     "passed_count": 5,
     "pass_rate_pct": 100.0,
     "per_ticker": {
-      "HDFCBANK.NS": {
-        "ticker": "HDFCBANK.NS",
+      "INFY.NS": {
+        "ticker": "INFY.NS",
         "passed": true,
         "status": "VERIFIED",
         "issue_count": 0,
         "issues": [],
         "verified_citations": [
-          "HDFCBANK_N3",
-          "HDFCBANK_N4",
-          "HDFCBANK_N5"
+          "INFY_N2",
+          "INFY_N4"
         ]
       },
-      "ICICIBANK.NS": {
-        "ticker": "ICICIBANK.NS",
+      "TCS.NS": {
+        "ticker": "TCS.NS",
         "passed": true,
         "status": "VERIFIED",
         "issue_count": 0,
         "issues": [],
         "verified_citations": [
-          "ICICIBANK_N3",
-          "ICICIBANK_N4"
+          "TCS_N4",
+          "TCS_N5"
         ]
       },
-      "KOTAKBANK.NS": {
-        "ticker": "KOTAKBANK.NS",
+      "HCLTECH.NS": {
+        "ticker": "HCLTECH.NS",
         "passed": true,
         "status": "VERIFIED",
         "issue_count": 0,
         "issues": [],
         "verified_citations": [
-          "KOTAKBANK_N1"
+          "HCLTECH_N1",
+          "HCLTECH_N2",
+          "HCLTECH_N3"
         ]
       },
-      "AXISBANK.NS": {
-        "ticker": "AXISBANK.NS",
+      "TECHM.NS": {
+        "ticker": "TECHM.NS",
         "passed": true,
         "status": "VERIFIED",
         "issue_count": 0,
         "issues": [],
         "verified_citations": [
-          "AXISBANK_N1",
-          "AXISBANK_N2",
-          "AXISBANK_N3"
+          "TECHM_N2"
         ]
       },
-      "SBIN.NS": {
-        "ticker": "SBIN.NS",
+      "WIPRO.NS": {
+        "ticker": "WIPRO.NS",
         "passed": true,
         "status": "VERIFIED",
         "issue_count": 0,
         "issues": [],
         "verified_citations": [
-          "SBIN_N5"
+          "WIPRO_N2"
         ]
       }
     }
   },
   "briefs": {
-    "HDFCBANK.NS": {
-      "ticker": "HDFCBANK.NS",
-      "company_name": "HDFC Bank Limited",
+    "INFY.NS": {
+      "ticker": "INFY.NS",
+      "company_name": "Infosys Limited",
       "sentiment": "Bullish",
-      "close_price": 846.0,
-      "day_change_pct": 2.94,
-      "five_day_change_pct": 5.22,
-      "volume_zscore": 1.86,
-      "headline_summary": "HDFC Bank closed at INR 846.0 on 20 Nov 2026, up 2.94% from the previous close of INR 821.8, marking a 5.22% gain over the past five trading days. The advance occurred on elevated trading activity, with a 20‑day volume z‑score of 1.86, while recent analyst coverage highlighted a consensus price target and its blue‑chip status, though some commentary noted heavy selling pressure.",
+      "close_price": 1098.0,
+      "day_change_pct": 0.56,
+      "five_day_change_pct": -3.81,
+      "volume_zscore": 0.12,
+      "headline_summary": "Infosys closed at INR 1,098.0 on 20 Nov 2026, up 0.56% (INR 6.1) from the previous close of INR 1,091.9. The stock rose modestly despite a 3.81% decline over the past five trading days, supported by news of a JPY 1.59 billion investment in NTT Docomo and analyst optimism on AI‑driven telecom demand.",
       "key_drivers": [
-        "Price momentum of +2.94% on the day with a 5‑day gain of 5.22%",
-        "Analyst consensus price target and positive outlook for Q2 FY27",
-        "Elevated trading volume (z‑score 1.86) despite noted heavy selling pressure"
+        "Positive news of a JPY 1.59 billion investment in NTT Docomo (INFY_N4)",
+        "Analyst view that AI telecom demand is building (INFY_N2)",
+        "Modest volume increase with 20‑day volume z‑score of 0.12"
       ],
       "cited_ids": [
-        "HDFCBANK_N3",
-        "HDFCBANK_N4",
-        "HDFCBANK_N5"
+        "INFY_N2",
+        "INFY_N4"
       ]
     },
-    "ICICIBANK.NS": {
-      "ticker": "ICICIBANK.NS",
-      "company_name": "ICICI Bank Limited",
+    "TCS.NS": {
+      "ticker": "TCS.NS",
+      "company_name": "Tata Consultancy Services Limited",
       "sentiment": "Bullish",
-      "close_price": 1640.0,
-      "day_change_pct": 1.93,
-      "five_day_change_pct": 3.56,
-      "volume_zscore": 0.15,
-      "headline_summary": "ICICI Bank Limited closed at INR 1640.0 on 20 Nov 2026, up 1.93% from the previous close and marking a 3.56% gain over the past five trading days. The rally coincides with reports of the stock reaching a fresh 52‑week high and analyst coverage outlining Q2 FY27 drivers.",
+      "close_price": 2376.2,
+      "day_change_pct": 1.43,
+      "five_day_change_pct": -1.3,
+      "volume_zscore": -0.42,
+      "headline_summary": "TCS closed at INR 2,376.2 on Nov 20, up 1.43% (INR 33.5) from the previous close of INR 2,342.7. The stock rose as the Nifty IT index jumped over 1%, with TCS among the top gainers, while 20‑day volume was below average (z‑score -0.42).",
       "key_drivers": [
-        "Positive daily price momentum (+1.93%)",
-        "Fresh 52‑week high reported (ICICIBANK_N4)",
-        "Analyst consensus price target article discussing Q2 FY27 drivers (ICICIBANK_N3)"
+        "Price rose 1.43% on the day as IT sector rallied",
+        "TCS featured among top gainers in market wrap highlighting strong performance",
+        "Volume remained subdued with a 20‑day z‑score of -0.42, indicating limited trading pressure"
       ],
       "cited_ids": [
-        "ICICIBANK_N3",
-        "ICICIBANK_N4"
+        "TCS_N4",
+        "TCS_N5"
       ]
     },
-    "KOTAKBANK.NS": {
-      "ticker": "KOTAKBANK.NS",
-      "company_name": "Kotak Mahindra Bank Limited",
-      "sentiment": "Bullish",
-      "close_price": 515.8,
-      "day_change_pct": 2.54,
-      "five_day_change_pct": 5.58,
-      "volume_zscore": -0.37,
-      "headline_summary": "Kotak Mahindra Bank closed at INR 515.8 on 2026-11-20, up 2.54% (INR 12.8) from the previous close of INR 503.0. The stock has risen 5.58% over the past five trading days, while 20‑day volume remains below average with a z‑score of -0.37. The rise comes as the bank was highlighted in a market focus piece noting its performance as the broader Nifty 50 eased.",
+    "HCLTECH.NS": {
+      "ticker": "HCLTECH.NS",
+      "company_name": "HCL Technologies Limited",
+      "sentiment": "Neutral",
+      "close_price": 1344.4,
+      "day_change_pct": 0.86,
+      "five_day_change_pct": -2.44,
+      "volume_zscore": 0.53,
+      "headline_summary": "HCL Technologies closed at INR 1,344.4 on Nov 20, up 0.86% from the previous close. The stock’s modest gain came amid mixed media coverage, with one outlet reporting a 2.11% decline and another noting broader market pressure from Fed rate‑hike signals. Trading volume was 1.16 times the 20‑day average, yielding a volume z‑score of 0.53.",
       "key_drivers": [
-        "Price gains driven by broader market focus on the bank as Nifty 50 eased",
-        "Positive price momentum with a 2.54% daily rise and 5.58% five‑day gain",
-        "Volume remains below average (z‑score -0.37), indicating modest trading activity"
+        "Modest intraday gain of 0.86% to close at 1,344.4 INR",
+        "Mixed news sentiment including reports of a price decline and Fed‑rate‑hike concerns",
+        "Volume 1.16× the 20‑day average with a z‑score of 0.53"
       ],
       "cited_ids": [
-        "KOTAKBANK_N1"
+        "HCLTECH_N1",
+        "HCLTECH_N2",
+        "HCLTECH_N3"
       ]
     },
-    "AXISBANK.NS": {
-      "ticker": "AXISBANK.NS",
-      "company_name": "Axis Bank Limited",
+    "TECHM.NS": {
+      "ticker": "TECHM.NS",
+      "company_name": "Tech Mahindra Limited",
       "sentiment": "Bullish",
-      "close_price": 1446.0,
-      "day_change_pct": 4.72,
-      "five_day_change_pct": 8.64,
-      "volume_zscore": 6.28,
-      "headline_summary": "Axis Bank closed at 1446.0 INR, up 4.72% on the day and 8.64% over the past five days, while trading on unusually high volume with a 20‑day z‑score of 6.28. News highlights include the stock nearing its 52‑week high and strong open‑interest gains, alongside the bank's participation in the Morgan Stanley Asia Pacific Summit.",
+      "close_price": 1746.2,
+      "day_change_pct": 1.35,
+      "five_day_change_pct": -1.01,
+      "volume_zscore": 1.0,
+      "headline_summary": "Tech Mahindra closed at INR 1746.2 on 20 Nov 2026, up 1.35% from the previous close, while the 5‑day change remains down 1.01%. The stock traded on higher volume with a 20‑day volume z‑score of 1.0, and the company marked its 40‑year anniversary with a bell‑ringing ceremony at the BSE, which may support the upbeat tone.",
       "key_drivers": [
-        "Strong price momentum: +4.72% daily and +8.64% five‑day gain.",
-        "Elevated trading activity: volume z‑score of 6.28 indicating heavy buying.",
-        "Positive sentiment from news of near 52‑week high and involvement in Morgan Stanley summit."
+        "Positive intraday price gain of 1.35% on higher-than-average volume (z‑score 1.0).",
+        "Celebration of 40‑year milestone at the BSE may boost sentiment.",
+        "Five‑day trend remains slightly negative (-1.01%)."
       ],
       "cited_ids": [
-        "AXISBANK_N1",
-        "AXISBANK_N2",
-        "AXISBANK_N3"
+        "TECHM_N2"
       ]
     },
-    "SBIN.NS": {
-      "ticker": "SBIN.NS",
-      "company_name": "State Bank of India",
-      "sentiment": "Bullish",
-      "close_price": 1165.1,
-      "day_change_pct": 0.79,
-      "five_day_change_pct": 7.88,
-      "volume_zscore": 0.06,
-      "headline_summary": "State Bank of India closed at INR 1,165.1 on Nov 20, up 0.79% from the previous close. The stock continues a 7.88% gain over the past five days, supported by a rally in the PSU bank index that saw SBI rise about 27% in November.",
+    "WIPRO.NS": {
+      "ticker": "WIPRO.NS",
+      "company_name": "Wipro Limited",
+      "sentiment": "Neutral",
+      "close_price": 185.7,
+      "day_change_pct": 0.96,
+      "five_day_change_pct": -4.57,
+      "volume_zscore": -0.07,
+      "headline_summary": "Wipro Limited (WIPRO.NS) closed at 185.7 INR on 2026-11-20, up 0.96% from the previous close of 183.93 INR. The stock is down 4.57% over the past five trading days and traded with a volume z‑score of -0.07, slightly below its 20‑day average. News coverage was limited to price listings, with one article noting Wipro as a 52‑week low pick, suggesting modest buying interest.",
       "key_drivers": [
-        "0.79% daily gain extending a 7.88% five‑day rise",
-        "PSU bank index near record high with SBI rallying ~27% in November (SBIN_N5)",
-        "Volume modestly above average (z‑score 0.06) indicating no abnormal trading pressure"
+        "Shares rose 0.96% to close at 185.7 INR.",
+        "The stock remains 4.57% lower than its level five days earlier, indicating short‑term weakness.",
+        "Volume was marginally below average (z‑score -0.07) and one article highlighted the stock as a 52‑week low candidate, hinting at potential value interest."
       ],
       "cited_ids": [
-        "SBIN_N5"
+        "WIPRO_N2"
       ]
     }
   },
   "raw_prices": {
-    "HDFCBANK.NS": {
-      "ticker": "HDFCBANK.NS",
+    "INFY.NS": {
+      "ticker": "INFY.NS",
       "status": "ok",
       "trade_date": "2026-11-20",
       "currency": "INR",
-      "open": 815.5,
-      "high": 850.35,
-      "low": 815.5,
-      "close": 846.0,
-      "prev_close": 821.8,
-      "day_change": 24.2,
-      "day_change_pct": 2.94,
-      "five_day_change_pct": 5.22,
-      "volume": 70096849,
-      "avg_volume_20d": 38455544,
-      "volume_ratio": 1.82,
-      "volume_zscore": 1.86,
+      "open": 1087.0,
+      "high": 1118.8,
+      "low": 1081.7,
+      "close": 1098.0,
+      "prev_close": 1091.9,
+      "day_change": 6.1,
+      "day_change_pct": 0.56,
+      "five_day_change_pct": -3.81,
+      "volume": 13747211,
+      "avg_volume_20d": 12953354,
+      "volume_ratio": 1.06,
+      "volume_zscore": 0.12,
       "unusual_volume": false,
-      "realized_vol_20d_pct": 23.76,
-      "fetched_at_utc": "2026-11-20T12:36:36.903549+00:00"
+      "realized_vol_20d_pct": 29.18,
+      "fetched_at_utc": "2026-11-20T14:03:33.240534+00:00"
     },
-    "ICICIBANK.NS": {
-      "ticker": "ICICIBANK.NS",
+    "TCS.NS": {
+      "ticker": "TCS.NS",
       "status": "ok",
       "trade_date": "2026-11-20",
       "currency": "INR",
-      "open": 1602.0,
-      "high": 1645.0,
-      "low": 1600.9,
-      "close": 1640.0,
-      "prev_close": 1608.9,
-      "day_change": 31.1,
-      "day_change_pct": 1.93,
-      "five_day_change_pct": 3.56,
-      "volume": 17972748,
-      "avg_volume_20d": 16553745,
-      "volume_ratio": 1.09,
-      "volume_zscore": 0.15,
+      "open": 2325.0,
+      "high": 2414.8,
+      "low": 2317.0,
+      "close": 2376.2,
+      "prev_close": 2342.7,
+      "day_change": 33.5,
+      "day_change_pct": 1.43,
+      "five_day_change_pct": -1.3,
+      "volume": 2959814,
+      "avg_volume_20d": 3544407,
+      "volume_ratio": 0.84,
+      "volume_zscore": -0.42,
       "unusual_volume": false,
-      "realized_vol_20d_pct": 27.1,
-      "fetched_at_utc": "2026-11-20T12:36:37.208327+00:00"
+      "realized_vol_20d_pct": 19.29,
+      "fetched_at_utc": "2026-11-20T14:03:33.407579+00:00"
     },
-    "KOTAKBANK.NS": {
-      "ticker": "KOTAKBANK.NS",
+    "HCLTECH.NS": {
+      "ticker": "HCLTECH.NS",
       "status": "ok",
       "trade_date": "2026-11-20",
       "currency": "INR",
-      "open": 499.0,
-      "high": 516.6,
-      "low": 499.0,
-      "close": 515.8,
-      "prev_close": 503.0,
-      "day_change": 12.8,
-      "day_change_pct": 2.54,
-      "five_day_change_pct": 5.58,
-      "volume": 18942554,
-      "avg_volume_20d": 21823971,
-      "volume_ratio": 0.87,
-      "volume_zscore": -0.37,
+      "open": 1326.0,
+      "high": 1363.0,
+      "low": 1317.5,
+      "close": 1344.4,
+      "prev_close": 1332.9,
+      "day_change": 11.5,
+      "day_change_pct": 0.86,
+      "five_day_change_pct": -2.44,
+      "volume": 3594472,
+      "avg_volume_20d": 3097322,
+      "volume_ratio": 1.16,
+      "volume_zscore": 0.53,
       "unusual_volume": false,
-      "realized_vol_20d_pct": 23.28,
-      "fetched_at_utc": "2026-11-20T12:36:37.832503+00:00"
+      "realized_vol_20d_pct": 19.02,
+      "fetched_at_utc": "2026-11-20T14:03:33.567800+00:00"
     },
-    "AXISBANK.NS": {
-      "ticker": "AXISBANK.NS",
+    "TECHM.NS": {
+      "ticker": "TECHM.NS",
       "status": "ok",
       "trade_date": "2026-11-20",
       "currency": "INR",
-      "open": 1373.0,
-      "high": 1450.0,
-      "low": 1368.8,
-      "close": 1446.0,
-      "prev_close": 1380.8,
-      "day_change": 65.2,
-      "day_change_pct": 4.72,
-      "five_day_change_pct": 8.64,
-      "volume": 21476210,
-      "avg_volume_20d": 6652986,
-      "volume_ratio": 3.23,
-      "volume_zscore": 6.28,
-      "unusual_volume": true,
-      "realized_vol_20d_pct": 26.26,
-      "fetched_at_utc": "2026-11-20T12:36:38.454171+00:00"
-    },
-    "SBIN.NS": {
-      "ticker": "SBIN.NS",
-      "status": "ok",
-      "trade_date": "2026-11-20",
-      "currency": "INR",
-      "open": 1150.0,
-      "high": 1174.9,
-      "low": 1144.0,
-      "close": 1165.1,
-      "prev_close": 1156.0,
-      "day_change": 9.1,
-      "day_change_pct": 0.79,
-      "five_day_change_pct": 7.88,
-      "volume": 17520251,
-      "avg_volume_20d": 16979449,
-      "volume_ratio": 1.03,
-      "volume_zscore": 0.06,
+      "open": 1719.8,
+      "high": 1776.3,
+      "low": 1706.9,
+      "close": 1746.2,
+      "prev_close": 1723.0,
+      "day_change": 23.2,
+      "day_change_pct": 1.35,
+      "five_day_change_pct": -1.01,
+      "volume": 3234077,
+      "avg_volume_20d": 2410183,
+      "volume_ratio": 1.34,
+      "volume_zscore": 1.0,
       "unusual_volume": false,
-      "realized_vol_20d_pct": 22.88,
-      "fetched_at_utc": "2026-11-20T12:36:39.170784+00:00"
+      "realized_vol_20d_pct": 17.17,
+      "fetched_at_utc": "2026-11-20T14:03:33.848417+00:00"
+    },
+    "WIPRO.NS": {
+      "ticker": "WIPRO.NS",
+      "status": "ok",
+      "trade_date": "2026-11-20",
+      "currency": "INR",
+      "open": 181.0,
+      "high": 187.81,
+      "low": 181.0,
+      "close": 185.7,
+      "prev_close": 183.93,
+      "day_change": 1.77,
+      "day_change_pct": 0.96,
+      "five_day_change_pct": -4.57,
+      "volume": 14698164,
+      "avg_volume_20d": 15342431,
+      "volume_ratio": 0.96,
+      "volume_zscore": -0.07,
+      "unusual_volume": false,
+      "realized_vol_20d_pct": 26.3,
+      "fetched_at_utc": "2026-11-20T14:03:34.000378+00:00"
     }
   },
   "raw_news": {
-    "HDFCBANK.NS": {
-      "ticker": "HDFCBANK.NS",
-      "company_name": "HDFC Bank Limited",
+    "INFY.NS": {
+      "ticker": "INFY.NS",
+      "company_name": "Infosys Limited",
       "status": "ok",
       "article_count": 5,
       "articles": [
         {
-          "title": "HDFC Bank Limited (HDFCBANK.NS) Stock Price, News, Quote & History",
-          "source": "Yahoo! Finance Canada",
-          "published": "Thu, 19 Nov 2026 19:00:50 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE5XTzhGSUFMZ1NyVWthWVk2cEZ3RHZQc0VuT3BxQTBWM3B2V2hIQTBBOENtV0loTTBwXy0tczFvQXEwZlRLTlVhS2hmSkdJb3hFX3JlSlJBTU1weTg?oc=5",
-          "citation_id": "HDFCBANK_N1"
-        },
-        {
-          "title": "HDFCBANK Option Chain: Live NSE Option Chain Data, OI & Price",
-          "source": "Kotak Neo",
-          "published": "Fri, 20 Nov 2026 08:08:20 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPVGtXUDZCVlBSOXAyaXFzSzdwVV9vVWJoeE9SekVMUURpa0VFUXpmQTYxamNiYlN0bm83bGVmUzhNYkRsZjh0Y0pHTWhPU2lROHZMQUtLVjdUR1h4M0lIYmVaUlNmSDItVks1LXlaVGpDMnlyLW1HbXVocFdxMkZpZkEzSlpQS3luamhz?oc=5",
-          "citation_id": "HDFCBANK_N2"
-        },
-        {
-          "title": "HDFC Bank (NSE: HDFCBANK) Price Target 2026: Consensus, Q2 FY27 Drivers and Key Risks",
-          "source": "Kalkine India",
-          "published": "Thu, 19 Nov 2026 10:56:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMi4wFBVV95cUxOS01ySWlDSERMc3NkMlNtREI5UVJ0dzBUeVQ1clhFTHZhdG44aWlhWVRHenNCYXBnR1BSNjJqcjl3dHhsQ2hSQVRfM3FrV2xqV0FPMmlzNEtpQmRMbHBkYVpWbGtzaENwYWtLY2p3aWZMLUVTRUlMN0ZXMW5veEtxNjRId2xPNzFkbkZ5WVZTOFhFckQ5ZmlMMWNUN0taSmltc0NLcWJiellpdk8xQ1E4eDlYTWk0Y0t5b0NCWk5YS0MzanlITXFBQnpxM1FDNWM0S2RsZW1rZFphQWdMWmx4QUUzaw?oc=5",
-          "citation_id": "HDFCBANK_N3"
-        },
-        {
-          "title": "HDFC Bank in Focus as a Blue-Chip Lender on 18 November 2026",
-          "source": "Kalkine India",
-          "published": "Wed, 18 Nov 2026 14:01:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxNa1BMNjlTUGZxMFVwa1VYUy1VMVBVZGZzVGlvaFBKcWRZT2FHSzZxcWoyTDhsR0Nmb0hXSmNNcHpPUHY4elU0MDRqTjVwM19WUmp1LVd1WVZWcFR1ME50VGtwVVMySy1oelBNdVdvWjVicHFFYW40MUxIckdaVWdwTEh5a0w1WXR6M2JISHVuaHkyTUFsMkhzTWVGZ0k3QWJiV3BhR2NYcFFHVE04c3c4Q1RBX2ZoTDlfSTZGTXZoOVFIUndETlFBSDROMFhJQ1JpU3piTUhxaHlSVG5i?oc=5",
-          "citation_id": "HDFCBANK_N4"
-        },
-        {
-          "title": "HDFC Bank shares edge higher, but heavy selling keeps pressure on stock",
-          "source": "TradingView",
-          "published": "Thu, 19 Nov 2026 07:08:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMixgFBVV95cUxNWEJGZURDNnNwYmV5NTFtUU51QWJ0U0xDWjN2eGl5Z3RvYTNDYTY1T09VcDN5UHgyVVZMckhiWURtVmg2ampncW02N0tvYk1xQ1RlNS0xTlRFVWhtOGFNbERzeG9GZzNIc0JZd015SWs0MEtualNvT2ZTWlRqTUkwY3VSN25KWExfN1VvVUtNU1R2X2Z4QW9qU29sU2otTTE4ZXZDOC00V18zNU5sYXhIVVdLQkdZUTV1V0paN21YemIxN05HaWc?oc=5",
-          "citation_id": "HDFCBANK_N5"
-        }
-      ],
-      "fetched_at_utc": "2026-11-20T12:36:41.754962+00:00"
-    },
-    "ICICIBANK.NS": {
-      "ticker": "ICICIBANK.NS",
-      "company_name": "ICICI Bank Limited",
-      "status": "ok",
-      "article_count": 5,
-      "articles": [
-        {
-          "title": "ICICI Bank Limited (ICICIBANK.NS) stock price, news, quote and history",
-          "source": "Yahoo Finance UK",
-          "published": "Wed, 18 Nov 2026 18:20:34 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE95MGkwMmVZNUp0YUZEeXlmVkZaeGFZcFhfMHpBVHZydU5ZOXhiQ29OY3Rac0VRWF80ZDNwTDYyTXRzdDF1bDZqNFU3RUdET0Nmd29oSjZ0TExtOUF3?oc=5",
-          "citation_id": "ICICIBANK_N1"
-        },
-        {
-          "title": "ICICI Bank Share Price - Live NSE: ICICIBANK Stock Price & Chart",
+          "title": "Infosys Share Price - Live NSE: INFY Stock Price & Chart",
           "source": "Upstox",
-          "published": "Wed, 18 Nov 2026 22:23:13 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE41ZWlLb1o0emplRlRyWWY3MnhuaG1TMzVobHB2ZVk4NGc5aTFkb3FrX2Q4ZjZaanV6V2oySlFPTlZZa05qUnNicW9pNktGdnlxU1BvalA3VjJVUlBqaUtSSmdaMA?oc=5",
-          "citation_id": "ICICIBANK_N2"
+          "published": "Thu, 19 Nov 2026 14:46:12 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5BbEJTdmZNbE5BN0ZRWWZpd2tZZnRCZWV0MFdhYW5nQ2NSSTgzUlI4TjVPaU5BV1FxQkpYUnFWa05Fb09uMkxlNDhUWVpvV2JLWGIxUmh3SUFKSzEwUHZpX1IyTVM?oc=5",
+          "citation_id": "INFY_N1"
         },
         {
-          "title": "ICICI Bank (NSE: ICICIBANK) Price Target 2026: Consensus, Q2 FY27 Drivers and Key Risks",
+          "title": "Infosys (NSEI:INFY) Stock Could Be Undervalued As AI Telecom Demand Builds",
+          "source": "Simply Wall St",
+          "published": "Thu, 19 Nov 2026 21:08:56 GMT",
+          "url": "https://news.google.com/rss/articles/CBMizwFBVV95cUxOaHZfcGhHNXoycjhhT3FQTFJPZHg3S19HVVZfdW1TNkFjckpqVFhKalZmNzdUUzc3SUFJdWM5MmtRbTg5Zk5WaFN6VXVDd1JXdjBVSFcxZEUwb2JQeUNVVXFoZ0l2dU5iZVE3WElCZ2VuTFFzYlRzNzJEcnNLTWttaUdKamJJb1Q3LXAwOW9jeDdxWnBDamE2dHFYZkIycWFQblE5dzRDUnpYRlBZMnhDUk96aHBsaU5ZTlZZaWk3YVlxMHNjSW5RY1A2cDJQRGPSAc8BQVVfeXFMTmh2X3BoRzV6MnI4YU9xUExST2R4N0tfR1VWX3VtUzZBY3JKalRYSmpWZjc3VFM3N0lBSXVjOTJrUW04OWZOVmhTelV1Q3dSV3YwVUhXMWRFMG9iUHlDVVVxaGdJdnVOYmVRN1hJQmdlbkxRc2JUczcyRHJzS01rbWlHSmpiSW9UNy1wMDlvY3g3cVpwQ2phNnRxWGZCMnFhUG5ROXc0Q1J6WEZQWTJ4Q1JPemhwbGlOWU5WWWlpN2FZcTBzY0luUWNQNnAyUERj?oc=5",
+          "citation_id": "INFY_N2"
+        },
+        {
+          "title": "Infosys INFY: KFin Technologies RTA Office Address Change",
           "source": "Kalkine India",
-          "published": "Thu, 19 Nov 2026 10:56:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxOZDJxZi01YlloZHczSDU4Vnlvd28xTl9BX3FDUFBGSGxzUjEyMkVoT1Z6eHQ4WkZZb1hUUGNyalpQMS1LSkJIWEZXMGw0cDJibG9HRE5oSHB2aE40S0t4WUw1N1RmVmF1dy1jN1VPdzdkT2ZVaERiQmVtWkszUmVyUl9hc2FUYzhaMGRSSjdOb2QwcjNFMGJrUTA5Z25wOENaMDFuVnVkVldDYVhaaHl6N19ldlQyVDBoM3dKZ3BUMWNwTTdEU2pIU1p0cVJ5bWVLbWljdDNDSHY3d0RyUFVzZQ?oc=5",
-          "citation_id": "ICICIBANK_N3"
+          "published": "Wed, 18 Nov 2026 16:40:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNT1V0c1BzenVyeU1jTFl3Mnl1Z3B6SnRYRjViMVpNWlEybzR6d3FoM29fekdtWlEzRDJES081NFhGd0cyNnV3eWl1dkMyZ0Y1azNoS05aVWhKMTc4UUk3R3ZwQUxUQXo3Skd5V3ZrbndiYWNwQzJHNGxfR0Zpak9JWlI0dHZLUDZMa0VPUkppTm51YkZEX0VwVEJ0TWNQUTZFWlpFNUdDOWZ3c0ZHTUhXNFpFM2tnWldiYU5Wb0tPb1hnUQ?oc=5",
+          "citation_id": "INFY_N3"
         },
         {
-          "title": "ICICI Bank Share Price at fresh 52-week high, valuation view",
-          "source": "Univest",
-          "published": "Fri, 20 Nov 2026 05:53:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxOTVJpRDc1bFkwc2IxMGNROWwwdGJINTdUX1RtU0VzdzlhcEdHNlpodUZhblRIWFplN3FURGpsckFyVVFOM3BTWkhOSDRpRWdBTDdtNnpiYm55SV9VTmxCOXdlbURVendvb21Pa2ZhYlFDMW14ME5OT0xMeFRrSFZ1ZUZrWldjUQ?oc=5",
-          "citation_id": "ICICIBANK_N4"
+          "title": "Infosys (NSE: INFY) Invests JPY 1.59 Billion for 10.1% in NTT Docomo Playspace",
+          "source": "Kalkine India",
+          "published": "Thu, 19 Nov 2026 06:36:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxQMGJXWFZKbGJveVJYQTE1RlVsMzdUUDdzai1rM1VMZkZkU2ZuTVhXZXcwVG04WloyVlBReV9jdk56TkQwQXVwRXU2UHI0dTJZY0J4QkpJVWFhTW5Nd3hvTGZ1aFVEV21CTUcwVjlCOGJMR2QxMXRQYTFGVEVVdFBDbF9SSmtOSndkSmhSLUJPdHVtT1plT1V4alVjSWJTaVhhZ05kQlBna25PTlMzNDVVSXdvZEhaUkFxNXJwX3VHbDVxM1BXaEJVaUdoa085VE5VX0RxcFFRckR5QQ?oc=5",
+          "citation_id": "INFY_N4"
         },
         {
-          "title": "ICICI Bank Limited (IBN) Stock Price, News, Quote & History",
-          "source": "Yahoo! Finance Canada",
-          "published": "Thu, 19 Nov 2026 07:03:25 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE8yYTd5anN5bjFIWTZrZU1LQmFCbHZ6MlNOeWl6SUwycGFLOVF2N0RldWNDd0tra1JyTHljSTAwdnl1cE9YY3lhN25nUGVtcnpf?oc=5",
-          "citation_id": "ICICIBANK_N5"
+          "title": "India stocks higher at close of trade; Nifty 50 up 1.14%",
+          "source": "Investing.com",
+          "published": "Thu, 19 Nov 2026 10:32:15 GMT",
+          "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPY3p5bWZ1bnp2RlFXVEZxanJ2ckVtd2dwamx4QWo5UlVGX0U3MDJjOVVGNUNuUVJXRnVxdnVmSkZSS2FXVFNFUlY1REZtQVZZV2RTV2NCZV92UE9lOXp4T1RGR0JKajY0SkdpV1gzYkY3Y3VLWlNDMjZZaEEwZmJ6ZXhYRUdvbW9XMG1KNUZKeDFGSUNFVFlsVlBHZlRXOGFUY3h2RzlrSHoxbmIwand3?oc=5",
+          "citation_id": "INFY_N5"
         }
       ],
-      "fetched_at_utc": "2026-11-20T12:36:43.239377+00:00"
+      "fetched_at_utc": "2026-11-20T14:03:36.416469+00:00"
     },
-    "KOTAKBANK.NS": {
-      "ticker": "KOTAKBANK.NS",
-      "company_name": "Kotak Mahindra Bank Limited",
+    "TCS.NS": {
+      "ticker": "TCS.NS",
+      "company_name": "Tata Consultancy Services Limited",
       "status": "ok",
-      "article_count": 1,
+      "article_count": 5,
       "articles": [
         {
-          "title": "Kotak Mahindra Bank (NSE:KOTAKBANK) in Focus as Nifty 50 Eases",
-          "source": "Kalkine India",
-          "published": "Wed, 18 Nov 2026 14:04:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxOSW5FbHRjWlFCcWYwUWlZbUcxX05uQjltanZrdVpiVFdmQU1wQ1FZOEt0UzNPNWsyS0dUUi1HNzZESl9qWnVURlNkdWdBV0RHc1JyaHFkaHlEcGt4a2xOSjhUcFB5a1VtZGEtWlZrQ2F1bXRXdWFkNDVmNTVlb3AzbkJCSTFGVDBVeWtUVjczRURtUkhHdXRvVk1PaUt5QXpEQ2FhX0c0TndrUS0xanZwSVg4OTN3WEJlUWFyNXFHc0puSTFSRk1UYkxtSF9hclFjQi1FYjRoUGpDY2paU2FFTWcyYldTSnhlMDJHdWxucmN2YzZT?oc=5",
-          "citation_id": "KOTAKBANK_N1"
+          "title": "TCS Share Price",
+          "source": "Upstox",
+          "published": "Thu, 19 Nov 2026 22:16:08 GMT",
+          "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE4xa3lkaFFielNzaEh0c3oxTzdzMzV1MDk5TzFMYnoweVkwWG02cVBRTHZSUmM2Q1JpYVpsN2l2VmZwMFpwUzI5cm5WOUFHSGE1c2ZsRjRTWWl3MmlNOGdQUmdkSlZLUUxqRUctcGVsdDA?oc=5",
+          "citation_id": "TCS_N1"
+        },
+        {
+          "title": "Tata Consultancy Services Limited (TCS.NS) Stock Price, News, Quote & History",
+          "source": "Yahoo! Finance Canada",
+          "published": "Fri, 20 Nov 2026 00:25:38 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE1BSy16NndZSGpmME05RXVyV2lZLTVNYjAwZUpqWkFkemk3bWdJUGM1STlteGM0Z2tfc2pzMjR5SGR3eVRZRm5XNzhoNUdyWWxYSHhnVw?oc=5",
+          "citation_id": "TCS_N2"
+        },
+        {
+          "title": "Anthropic IPO: Can Indian Investors Buy Shares? November 19 Nasdaq Listing, LRS Limit and 20% TCS Rules Explained",
+          "source": "Kotak Neo",
+          "published": "Fri, 20 Nov 2026 10:37:24 GMT",
+          "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxNLXJfMzRIWmZuT0hPMDdhMDdoS016el92TU1UZEFtenZTc2owdGY3TU1JOERtTnlZOEF3ZTdIN1FFc3NzMWtxQXZyWFIxcVFNbmlTc0UzWUVMWlRiRF9HVmktUUVTc2FHak5Ka0ZERDNneTluM1NTMldFSXFGc3YycGFtZWtpWHZ1Ujc5cmFsMUNQdmVJUzJzR2VwTmRsMWh6TERtWQ?oc=5",
+          "citation_id": "TCS_N3"
+        },
+        {
+          "title": "Nifty IT jumps over 1% as TCS, Tech Mahindra, HCL Tech gain; Indian IT stocks buck global AI selloff",
+          "source": "Moneycontrol.com",
+          "published": "Fri, 20 Nov 2026 04:21:18 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxPVjVnUkxrQ3F6bzNQdnZHUTRHUndNOVBNQ2FabENUVHhubERiNW52MExQOFdlOW8tMURJZnJSNV9XNUxjMUhLR3lXYVdkYzVfc1VfenZjUDVrUTVtckVVeTZVLThNYkczcHFPcjJHdWxocUtyTktld0ozVV81dTlhOEY0N01ETVVjQkwxNEYyY1pKTm8ybnQ1LWhJTEpLS2lReUpEdGpjc29jOVlhal9lVmM1OUlUOGdOeGZSZWdsTlNXVHY5OGpEZmp1UFdZM2tiQWNTUXRzTUU3YjNfc08xUDJsMTZXU05vcDhOQ0I5SjFFUTTSAfgBQVVfeXFMTXk0VE1MeExLSkpvQWNfLWh1cW45VEFVTlJMN19KVlJ0ekFlZ1hkbzhDX3VzbDVoREI4SHBXRGxIdmo4X2w0Y0NCd2h3dTJyUEFmaDFTOUZaVW4wempjc1lkVGIyN082OU5sanB4UW51M0NPVVZHeWFFM0dFck95NXFnanJvN1VTVWNiYnlQZGNEUGdhTWNVeDA0VktPdGwzYlJVenJqaVptTW9Ha2tRNEtYMXFQQTlQTnpYNmlLVmw4S3gwYlhSV2ZaNFhoTm1sVmJQNGF2Q25hRnpwTGY4QmxaSXg4VVktNkJaZjdDZzlsNnJfb19GeVQ?oc=5",
+          "citation_id": "TCS_N4"
+        },
+        {
+          "title": "Market wrap: Maruti Suzuki, Eicher Motors, TCS, Tech Mahindra top gainers and losers on Nifty and Sensex o",
+          "source": "The Economic Times",
+          "published": "Thu, 19 Nov 2026 12:36:06 GMT",
+          "url": "https://news.google.com/rss/articles/CBMioAJBVV95cUxQNTNKWDVMNlI3Qjhkbzh5M3VEODZtZDlQcWxGRGxxM1Q4WlBYM0lzUjkyZWJwOGx4LVFaLWxnUGFCYmF1SFpaYUlHQ001d3ZJZHhEWHkxWW45UWlwN3hPWUxQRS1tNmlEa0pkejlmRjU5Um1BMGdma2JEZTNHc3VRemxkLUxXZTRZRkw1UW9hNVVWam5ybXBNRy01a0JycDV6NHBOS3ZmLVRwdG1UZ3BIaTFWVkpyN2tJdzV2Q05EVGdGeS1nTExSNjlCekJxS2ZPWUFyOEVVUkxpcFZDbXBkRTA4Vjc2THUwekVoSGwtZTU4d3hlVnk5TTJHOXBlcUVaMUJuc2VDeW5mVXY1VEZUbHlMazB1ZnFDeS1fWTFyemrSAZoCQVVfeXFMTnd1NGl0ZmJ5ZHlCYUswR3ZVWC1qOU04SHdOR0tDclhocFhudzlzcjF4RHE5UEdWanhLVG8xVW9pdHVjSmRUUnBoWTdXbU1NUEc3dm8wYUFpZ2pTdUJMMkJoeUVjR2dvVlN6ZzVLNVktbWlvVEo2Z2k2RjBQNi1tTnhPT2FGOVpZcUt6N3RFVTRrMjdOcXdvRXhkNjlueURLalVhZk0taUl6SE5uek11ZmNtZnA4X29RNVhMV1U5S3Blc1BnUFZoV1FvWnlteHkxY1YyR29jR3dpTDZvd1pVUjBwYTdld3pWTHU1MG50bnIwUml3MVFISXdDUWlOb2ZLNUZrRlAzX183bXNsREVhUGU1QWx5b2YyQ0xB?oc=5",
+          "citation_id": "TCS_N5"
         }
       ],
-      "fetched_at_utc": "2026-11-20T12:36:44.188529+00:00"
+      "fetched_at_utc": "2026-11-20T14:03:37.533216+00:00"
     },
-    "AXISBANK.NS": {
-      "ticker": "AXISBANK.NS",
-      "company_name": "Axis Bank Limited",
+    "HCLTECH.NS": {
+      "ticker": "HCLTECH.NS",
+      "company_name": "HCL Technologies Limited",
       "status": "ok",
       "article_count": 3,
       "articles": [
         {
-          "title": "OI Spurts — Open Interest Gainers & Buildup in F&O Stocks",
-          "source": "NiftyTrader",
-          "published": "Fri, 20 Nov 2026 09:18:25 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE1ua3dUWEpicWE2dy1fZ2s3V01UODQxaTU1SDVBbnpTR29iWnZycEc0elE3QUg4bGFxMVZncGNpZ0V6M05YRWsyVnBCMDM?oc=5",
-          "citation_id": "AXISBANK_N1"
+          "title": "HCL Tech Share Price Today, HCL Tech Stock Price Live NSE/BSE Updates",
+          "source": "The Economic Times",
+          "published": "Thu, 19 Nov 2026 12:37:16 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNM0tuT0d3S2tscVlhVTY2eHktNWY3YU03ZDhuUlNwa05YcGVpYno3VWM1bU1ldFVJTVZLNEZOTEo5NFpCT3RYZnBRTmctazdreEc5R0xiT281bUtBSGVjSTMyWWZPS2NzTXNfUUREQTVTekQ1V3ZVeTZRZDM5a3d2Y3FoQ3czeDQ0RzM4?oc=5",
+          "citation_id": "HCLTECH_N1"
         },
         {
-          "title": "Axis Bank Share Price Today Near 52-Week High and Valuation",
+          "title": "HCL Technologies Share Price Falls 2.11% Today",
           "source": "Univest",
-          "published": "Fri, 20 Nov 2026 04:30:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxOMXgwaEtlSWxENlFGQUxuQ3lHYTVjOFRKQmxNU2ZaNXZ5WXVaQnVkT193Vy1VQWNXRU9laGxJdElaY3JONGtNdlFoRW81QkRXSmV3M2NGZXRsNEpfXzNld2ZNNVhPRTlodDJIa2hjRWF0RE8wb2UzYno3dFlwcGViNVA2NE0taExtOWVv?oc=5",
-          "citation_id": "AXISBANK_N2"
+          "published": "Thu, 19 Nov 2026 07:23:28 GMT",
+          "url": "https://news.google.com/rss/articles/CBMifkFVX3lxTFBlSkthc3lick16d08tS3pKREVZNVU2SVdpVVkxT2JkN0g5TGoySjl0VUtPUkhZb3lfYUZYcjVCYkd6by1aQmJiTVIyNkxjaElDUjdKQjVpRUdBc0hEaDVNUEJHSWU4RWtyUmFvUmE2Zkh6U0VyakctOHhzWVRDZw?oc=5",
+          "citation_id": "HCLTECH_N2"
         },
         {
-          "title": "Axis Bank AXISBANK Morgan Stanley Asia Pacific Summit 2026",
-          "source": "Kalkine India",
-          "published": "Thu, 19 Nov 2026 12:25:00 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiygFBVV95cUxQNXc3Q0tPc2lpNkRfRmRZRzk1ZHFtWWxNWXBMV1VOaW9hLU9ZX2laUVFDVnAxaUVfbE9seTJ6NUt1SjdDWFJURC1YNXVOcktzQ3JZUnE5OTNRYU5MdFBwMFFoS1FtNklwUGtyOFpZUWJmVVB3YjF0VW1FMkJvSmFsTW0taTRFaGxUQUlyUG90dmR4am9jNU1hdVFEZ19BcDY5WmNVRmtieUVSWnZyYTM3d2ZvZmdqMEhHZGFyWFBacHd2V1pLSTdOMUp3?oc=5",
-          "citation_id": "AXISBANK_N3"
+          "title": "Sensex, Nifty Open Lower as Fed Signals More Rate Hikes",
+          "source": "HDFC Sky",
+          "published": "Thu, 19 Nov 2026 04:46:24 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxNTzJKUVBfWmp2bTRfdjdMNUlRTGVrZ2NDcWRKdUNQRmtPb1FnQVlOYmRUSHc1c0E5S21mZVRHYkNoNUUwZVE1Y0FxV0RZWjF0OTZnTTY2UDVCSG8tVS1CTUQ3WXE2Tm5TaTQ0YkROMF9KN2F3cE1nQVhMVGphcW1wVlJJaGxTLTJDN09TZEdNRFhTdlprQVluOFh2NFFKQU9PaG41OXYxdkNpaHZRZGVBanJBRjg1SGx3QlVnMENVMlh4RlI4eTIzN0hTMFc3S3BCVzN5a093?oc=5",
+          "citation_id": "HCLTECH_N3"
         }
       ],
-      "fetched_at_utc": "2026-11-20T12:36:45.570947+00:00"
+      "fetched_at_utc": "2026-11-20T14:03:38.914768+00:00"
     },
-    "SBIN.NS": {
-      "ticker": "SBIN.NS",
-      "company_name": "State Bank of India",
+    "TECHM.NS": {
+      "ticker": "TECHM.NS",
+      "company_name": "Tech Mahindra Limited",
+      "status": "ok",
+      "article_count": 2,
+      "articles": [
+        {
+          "title": "Tech Mahindra Share Price - Live NSE: TECHM Stock Price & Chart",
+          "source": "Upstox",
+          "published": "Fri, 20 Nov 2026 00:22:45 GMT",
+          "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9QQm0zbE8ydTFJNzV3VTNXX2FIRnA0WmI2czZ1UWE1a2k2Mi01a2dzZnBpaGEwSHo2Q0ticnJxSGQ0YWpTMzRRbjF0aDhkaG9oRTdSeGlEbERSWTlrVEVFdTdGSXR4ckZKSm4tZA?oc=5",
+          "citation_id": "TECHM_N1"
+        },
+        {
+          "title": "Tech Mahindra marks 40 years with bell-ringing ceremony at the Bombay Stock Exchange",
+          "source": "Zawya",
+          "published": "Fri, 20 Nov 2026 11:53:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMi3wFBVV95cUxQbWNnVVNPLWVscEgzTTRCa0hMWl96bHFVN1FJeElySjFyOW5ncHU0Rzhoa1JQaS1mOExMQTRpZXRQZEd4MGRmNUxybjd3M3h6QmxPZmF3NzAzWmdYZlQ1ZlpKNVJKMVctNTU4X25hZnBHcGJJaFE1djBLZEtrQXl4dmZqTm1oV1lsdTJlZ3NOMVc3NE4zNFR2STJBRXlaUHZPUU9RRGZxbjg0RVZFQXBkZUJ2WDF6RmtjZDk3anVfRkl4dV9BV3ZzcjZrNVFFQW81LWxBRGd3aW5CV1l3ZjJZ?oc=5",
+          "citation_id": "TECHM_N2"
+        }
+      ],
+      "fetched_at_utc": "2026-11-20T14:03:40.208883+00:00"
+    },
+    "WIPRO.NS": {
+      "ticker": "WIPRO.NS",
+      "company_name": "Wipro Limited",
       "status": "ok",
       "article_count": 5,
       "articles": [
         {
-          "title": "SBI Option Chain: Live NSE Option Chain Data, OI & Price",
-          "source": "Kotak Neo",
-          "published": "Fri, 20 Nov 2026 07:23:46 GMT",
-          "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPaFRKcnQzaXlkc05EVzZSRWlFOUNVYW5nUWo5c1hMNmZQd0U3R1hDa2lqaUVlUHFMbDZzb3dLQlpkUXlLTUxEVEdHWHFoV1BQeTM3alZXWDRRVXloQ1ZET2NnaktKNk9xa0RSQm05ZktWbTRjXzZsREFYd3VYMV94TEp4QWNYMDhIYURVUnhOX3hhVjJyenNWOA?oc=5",
-          "citation_id": "SBIN_N1"
+          "title": "Wipro Share Price",
+          "source": "Upstox",
+          "published": "Thu, 19 Nov 2026 10:09:32 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE5KdElZR3B2X3pjUm1GemQyR3d5VktiaGR0OUVqYkgtMEtmS25BbGhDMS01MTg5d2hCQ3pLLVZjR3hLMlVPTXRuVkdhMDBtenZUUGFlb2VjbC1uQkFa?oc=5",
+          "citation_id": "WIPRO_N1"
         },
         {
-          "title": "State Bank of India (SBIN.NS) Stock Price, News, Quote & History",
-          "source": "Yahoo! Finance Canada",
-          "published": "Thu, 19 Nov 2026 13:10:11 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFB4Nlc1eXAzMzRZbnBLd3hvaEJGam1qdnZweXAzdk4yT2hvMGxXRnZHT1VNc0JFMjlZRjFXWXdDaDVjU3lTRTZjNXVGMENwdVZQUkpZZ09n?oc=5",
-          "citation_id": "SBIN_N2"
+          "title": "Top 10 52-Week Low Shares To Buy In India November 2026",
+          "source": "Samco",
+          "published": "Thu, 19 Nov 2026 06:51:09 GMT",
+          "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE9RSERnMHJOMFZWbERwRE04WjRzYjNoYUxBQVJONTZSNGJsX01zRlhkUlN2ZlE2aEdCcDBRTm8xM09tajQ5Z1lvWlZxWUNEdWVxSFI4NWtURkg0UWNQaXBjVHBhSUtjYUtzWlZOZDFtc2czLXUyTnpoQw?oc=5",
+          "citation_id": "WIPRO_N2"
         },
         {
-          "title": "Trade Spotlight: How should you trade State Bank of India, Indraprastha Gas, Bank of Baroda, Vijaya...",
-          "source": "Moneycontrol.com",
-          "published": "Thu, 19 Nov 2026 02:34:26 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiwwJBVV95cUxPN2FhOUx2ZmJzSFpBUVpXbEdDNWcxQVRVM18xaVBJR3I5R2N1RU40QnR6TW81b3k2SWhXMVpqNFZFTlk2ZmdEZWU4WXBxOXJHQU5jODY4VWJlTjJway0zNThPVGJGbEZaOVVfM0FRWDNjR3RvX3Zjb2NxQU5FTzlpYVJPS2lhR3NkVHU2UGoxRXE3VkxJUlJwdTQtcjVFMDNfaHowcFlnME5jTVpBTTU1ZnpLZThGcDBENzdzWk5EOUhwQlRWYU15V2tnS2NDTjlRelBFRXliY3FCSnpRTTE3bUdHdzR0cnF0WVBSMG9FOURscWRjS3V2dkpGRlAxeE04OW03M3hvWUo0VnBVdGJ6SVp1WVM2Yl9XQU5OZnVhSEZRMm1jVmoybXR5QVFES3RuYTNINEh0R2UtcE5VbTlYbjdkQdIByAJBVV95cUxOYTJpaGZ1YXY3UG12Q1RQZ3JIOXRGZWJ4VUNGSmRubF9jTUpnUm9NdmRqaDJjY3ZweDFiUUNOaTBVM0JXVXI5MnRHdlFxSGRxbGJoZzFQaTU5NXF6dk1ZVEpHY1JsT1o1M3gxMW44UXF3dDUxejVyZUFTS01tZnFKZER0d29rWFdmQjFJNWU1YmlWNkY3c1ctaklxTFdxZ0xlZlBjbE0ta0lpR1UwUE1sSWZ2bUZadFlwRkdtYXlHUEtKMk5mUlNKbEpaYnNCUGduZzJrTzdTdS1rUkhVWENESUVKTk4xNlZ3eXFHMWp2SVA3S1hvekFBVk9QcFF1dmxwbVdfYjRHNXRGXzJWb1paakpLeDgwcTZzcEZydE1hRk5jMS1XVlh5UlJVSU1mR1ljSS16SG9jUWlrNzV2ZXlsV3paR20zUGxm?oc=5",
-          "citation_id": "SBIN_N3"
+          "title": "Infosys Share Price - Live NSE: INFY Stock Price & Chart",
+          "source": "Upstox",
+          "published": "Thu, 19 Nov 2026 14:46:12 GMT",
+          "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5BbEJTdmZNbE5BN0ZRWWZpd2tZZnRCZWV0MFdhYW5nQ2NSSTgzUlI4TjVPaU5BV1FxQkpYUnFWa05Fb09uMkxlNDhUWVpvV2JLWGIxUmh3SUFKSzEwUHZpX1IyTVM?oc=5",
+          "citation_id": "WIPRO_N3"
         },
         {
-          "title": "NSE Emerges as World’s Fifth Largest Stock Exchange, Surpasses Nasdaq and HKEX",
-          "source": "The Newsman of India",
-          "published": "Fri, 20 Nov 2026 06:48:26 GMT",
-          "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxNT0pyX25LOFpoUlNYSTZyWlFvVlVhWnVoOTcxWFBqX21PMVE1TmlMSEN0dlpBcGU2UDdXWEFKd1NXWURockN0R0xWeVpQamJrUHh1MHU2M0pfR25aR2tMSzF0aFc0TXVEM0NrRGZIamVCMms2Z2xVMjVsbm5ySnA3aTZjRXQwTGN6dzhIM2ctMjdTLXJiMEVCbUVhbmFmanVYcVFlTXdwOC1UaUU?oc=5",
-          "citation_id": "SBIN_N4"
+          "title": "TCS Share Price",
+          "source": "Upstox",
+          "published": "Thu, 19 Nov 2026 22:16:08 GMT",
+          "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE4xa3lkaFFielNzaEh0c3oxTzdzMzV1MDk5TzFMYnoweVkwWG02cVBRTHZSUmM2Q1JpYVpsN2l2VmZwMFpwUzI5cm5WOUFHSGE1c2ZsRjRTWWl3MmlNOGdQUmdkSlZLUUxqRUctcGVsdDA?oc=5",
+          "citation_id": "WIPRO_N4"
         },
         {
-          "title": "PSU Bank index nears record high; SBI, PNB, BoI rally up 27% in November",
-          "source": "Business Standard",
-          "published": "Thu, 19 Nov 2026 06:47:18 GMT",
-          "url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxQVFZNWGozN2piVFVLNGNia0FBTXpBY3dwWHcwRGZxUzRpZXZaY3hyV2FDRks3aUNQd1dKb1ZQOHJfMFZ4ZWtZQm1mRmhUMFVkVGlqVzJjOVZ1TFpWbFJCWFJ1MmcyU1paMTBOM1NadXB5bVIzUVIwQWJTOHRTT3pQbWQ1RFBPdjRmaWQ4RGdLWjJmaUQ5dGhwZndkZ2RUTUM3X2w1dmxMWHVnTG02b3RWVEFXdDJ1d3BtNU81TnNmNFlzTlFRWFQ3Vk96QVhhX21N0gHWAUFVX3lxTE8wTzdWV0g2Y01qY2oxRGE0blRjR1RCeDZDTkQ4b0NiMjR3YnJwY3V1RTY3ZmRSM1BYYXJXVThzMTJUYWtsTzAzMEdQY2pLZUJGcmg5cGVQUUdqcjdzTHV0UUxScHpsZ1lTeTlmU3pLckdleHhpeTQ3ck9LblVRQzlsaG5GWTIxTlpyWE1zWU5ZZkV2NHkwOXpleG9saVhIaUM4Rk41bjZxaHF2bDdGeDRvUEdTMk9NV01BWE5vWTM2UTNRZV93M2lYVDZTQ0VEY19wUVA3Z1E?oc=5",
-          "citation_id": "SBIN_N5"
+          "title": "ESDS Software Solution Ltd Share Price Today,, ESDS Share Price NSE, BSE",
+          "source": "Business Today",
+          "published": "Wed, 18 Nov 2026 18:30:00 GMT",
+          "url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxQak9QTnRaYVg4R1BMUWlFNDZTM1pBdlVZRnZyaVJJeVFMUEdNcHYycWl1VVJTeDRNV3FWLVlSOF9qSnBYSU5HNjJsYWNIdmdxUnQwN1ZOZllaZTZqTWpndFFZWFR6RnNxdHhxUnlvOUlZWnR1THNoZ3JpOVJnM1Zlc2lDVzNlVXptSWEweVQ3SQ?oc=5",
+          "citation_id": "WIPRO_N5"
         }
       ],
-      "fetched_at_utc": "2026-11-20T12:36:46.606083+00:00"
+      "fetched_at_utc": "2026-11-20T14:03:41.473232+00:00"
     }
   }
 }
