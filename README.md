@@ -106,6 +106,18 @@ Connects tracked equities directly to live NSE exchange disclosures and cited do
 
 ---
 
+### 📖 Key Market & Technical Terms Explained
+
+For readers unfamiliar with Indian equity trading terminology used across **Radar**, **Backtest**, and **Risk Plan**:
+
+- **15m ORB (15-Minute Opening Range Breakout):** Tracks the high and low of the first 15-minute market candle after the NSE/BSE open (**9:15 AM – 9:30 AM IST**). A price move above that range signals an upward breakout (`Above range`), while a drop below signals downward pressure.
+- **Daily 41-EMA (41-Day Exponential Moving Average):** A medium-term trend filter weighting recent closing prices more heavily. DalalScanner uses it to classify whether the Nifty 50 is in a bullish or bearish regime and flags individual stocks as `Extended` if they stretch too far above their 41-EMA.
+- **20D Relative Volume (`Rel Vol`):** Compares a stock's current trading volume against its 20-day average volume (e.g., `1.82x` means 82% higher participation than normal).
+- **20D Volume Z-Score:** Measures how many standard deviations today's volume is from its 20-day mean—helping confirm whether a price move is backed by unusual institutional activity.
+- **52W High Distance (`From 52W High %`):** Shows how close a stock is trading to its highest price over the past 52 weeks.
+- **Delivery (1x) vs. Intraday (5x):** In **Risk Plan**, **Delivery** sizes positions using 100% available cash for multi-day holding, whereas **Intraday** accounts for standard 5x broker margin with same-day square-off.
+
+
 ## 🔍 What Makes DalalScanner Different?
 
 **Financial research should be verifiable, not just convincing.**
