@@ -221,7 +221,7 @@ Open `http://localhost:8501` in your browser.
 
 ## ⚠️ Disclaimer
 
-DalalScanner is an experimental financial research and analytical workbench built for educational, informational, and research purposes. Market quotes are delayed (~15 minutes) and AI-generated summaries may contain omissions. Nothing in this application constitutes financial or investment advice. Always verify figures against official exchange disclosures before making trading or investment decisions.
+DalalScanner is an educational and research tool for Indian equity markets. Market quotes are delayed (~15 minutes) via public feeds, and nothing in this application constitutes financial or investment advice. Always cross-check figures against official NSE/BSE disclosures before making trading or investment decisions.
 
 ---
 
